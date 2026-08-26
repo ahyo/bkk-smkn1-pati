@@ -1,0 +1,85 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Kelola Perusahaan{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Kelola Perusahaan</h1><p>{{ meta.total }} perusahaan terdaftar di portal.</p></div>
+  <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">⬇️ Ekspor CSV</a>
+</div>
+
+<div class="tabs">
+  <a href="/admin/perusahaan" class="{{ 'active' if not status_filter }}">Semua</a>
+  {% for s in CompanyStatus %}
+    <a href="?status_filter={{ s.value }}" class="{{ 'active' if status_filter == s.value }}">{{ s | label_status_perusahaan }}</a>
+  {% endfor %}
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+    <div>
+      <label class="label" for="q">Cari perusahaan</label>
+      <input id="q" type="search" name="q" value="{{ q }}" placeholder="Nama / bidang / kota">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" type="submit">Cari</button>
+      <a href="/admin/perusahaan" class="btn btn-ghost">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if companies %}
+<div class="grid">
+  {% for c in companies %}
+  <div class="card">
+    <div class="card-body">
+      <div class="flex gap items-center wrap">
+        <div class="logo-box">
+          {% if c.logo %}<img src="{{ url_for('static', path=c.logo) }}" alt="">{% else %}{{ c.initials }}{% endif %}
+        </div>
+        <div style="flex:1;min-width:220px">
+          <h3 style="margin-bottom:.15rem">{{ c.name }}
+            <span class="badge {{ c.status | badge_perusahaan }}">{{ c.status | label_status_perusahaan }}</span>
+          </h3>
+          <div class="cell-sub">
+            🏭 {{ c.industry or '-' }} · 📍 {{ c.city or '-' }} · 👤 {{ c.contact_person or '-' }}
+          </div>
+          <div class="cell-sub">
+            ✉️ {{ c.user.email if c.user else '-' }} · ☎️ {{ c.phone or '-' }} ·
+            📋 {{ counts.get(c.id, 0) }} lowongan · 🕒 daftar {{ c.created_at | tanggal }}
+          </div>
+          {% if c.verification_note %}<div class="cell-sub" style="color:var(--warn-700)">💬 {{ c.verification_note }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="job-foot">
+        <div class="chips">
+          {% if c.is_verified %}<a class="chip" href="/perusahaan-mitra/{{ c.slug }}" target="_blank">👁️ Halaman publik</a>{% endif %}
+          <a class="chip" href="/admin/lowongan?q={{ c.name | urlencode }}">📋 Lowongan perusahaan</a>
+        </div>
+        <form method="post" action="/admin/perusahaan/{{ c.id }}/status" class="flex gap-sm wrap items-center">
+          <input type="text" name="note" placeholder="Catatan verifikasi (opsional)" value="{{ c.verification_note or '' }}"
+                 style="width:250px">
+          <select name="new_status" style="width:auto">
+            {% for s in CompanyStatus %}
+              <option value="{{ s.value }}" {{ 'selected' if c.status == s }}>{{ s | label_status_perusahaan }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-primary btn-sm" type="submit">Terapkan</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% set base_query = 'status_filter=' ~ status_filter ~ '&q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% else %}
+<div class="card">
+  {% with ico='🏢', judul='Tidak ada perusahaan', pesan='Belum ada data pada filter ini.' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

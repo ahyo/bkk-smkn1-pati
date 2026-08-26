@@ -1,0 +1,50 @@
+{% extends "layout/base.html" %}
+{% block title %}Perusahaan Mitra{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/">Beranda</a> › Perusahaan Mitra</div>
+    <h1>Perusahaan Mitra BKK</h1>
+    <p>{{ meta.total }} dunia usaha &amp; dunia industri yang bekerja sama dengan {{ settings.school_name }}.</p>
+  </div>
+  <form method="get" class="flex gap-sm">
+    <input type="search" name="q" value="{{ q }}" placeholder="Cari nama / bidang / kota">
+    <button class="btn btn-primary" type="submit">Cari</button>
+  </form>
+</div>
+
+{% if companies %}
+<div class="grid grid-3">
+  {% for c in companies %}
+  <div class="card">
+    <div class="card-body">
+      <div class="flex gap-sm items-center mb-2">
+        <div class="logo-box">
+          {% if c.logo %}<img src="{{ url_for('static', path=c.logo) }}" alt="">{% else %}{{ c.initials }}{% endif %}
+        </div>
+        <div style="min-width:0">
+          <h3 class="truncate" style="margin:0"><a href="/perusahaan-mitra/{{ c.slug }}">{{ c.name }}</a></h3>
+          <small class="muted">{{ c.industry or 'Bidang usaha umum' }}</small>
+        </div>
+      </div>
+      <div class="small muted">📍 {{ c.city or 'Lokasi belum diisi' }}</div>
+      <div class="job-foot">
+        <span class="badge {{ 'ok' if c.is_verified else 'muted' }}">{{ counts.get(c.id, 0) }} lowongan aktif</span>
+        <a href="/perusahaan-mitra/{{ c.slug }}" class="btn btn-ghost btn-sm">Detail →</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% set base_query = 'q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% else %}
+<div class="card">
+  {% with ico='🏢', judul='Belum ada perusahaan mitra terverifikasi',
+          pesan='Perusahaan yang mendaftar akan tampil setelah diverifikasi pengelola BKK.' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

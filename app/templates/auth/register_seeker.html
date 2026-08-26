@@ -1,0 +1,79 @@
+{% extends "layout/base.html" %}
+{% block title %}Daftar Pencari Kerja{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:680px;margin:0 auto">
+  <div class="card-head">
+    <div>
+      <h1 style="font-size:1.4rem;margin:0">Daftar Pencari Kerja</h1>
+      <p class="small muted mb-0">Isi data dasar — detail profil dan CV dapat dilengkapi setelah akun aktif.</p>
+    </div>
+    <span class="badge ok">🎓 Alumni</span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/daftar/pencari-kerja">
+      <fieldset>
+        <legend>Data diri</legend>
+        <div class="field">
+          <label for="full_name">Nama lengkap <span class="req">*</span></label>
+          <input id="full_name" type="text" name="full_name" value="{{ form.full_name | default('') }}" required>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="email">Email aktif <span class="req">*</span></label>
+            <input id="email" type="email" name="email" value="{{ form.email | default('') }}" required>
+          </div>
+          <div class="field">
+            <label for="phone">Nomor WhatsApp</label>
+            <input id="phone" type="tel" name="phone" value="{{ form.phone | default('') }}" placeholder="08xxxxxxxxxx">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Data sekolah</legend>
+        <div class="form-row-3">
+          <div class="field">
+            <label for="nis">NIS / NISN</label>
+            <input id="nis" type="text" name="nis" value="{{ form.nis | default('') }}">
+          </div>
+          <div class="field">
+            <label for="major">Kompetensi keahlian</label>
+            <select id="major" name="major">
+              <option value="">— pilih —</option>
+              {% for m in MAJORS %}<option value="{{ m }}" {{ 'selected' if form.major == m }}>{{ m }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="graduation_year">Tahun lulus</label>
+            <input id="graduation_year" type="number" name="graduation_year" min="1990" max="2100"
+                   value="{{ form.graduation_year | default('') }}">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Keamanan akun</legend>
+        <div class="form-row">
+          <div class="field">
+            <label for="password">Kata sandi <span class="req">*</span></label>
+            <input id="password" type="password" name="password" required>
+            <div class="help">Minimal 8 karakter, memuat huruf dan angka.</div>
+          </div>
+          <div class="field">
+            <label for="password_confirm">Ulangi kata sandi <span class="req">*</span></label>
+            <input id="password_confirm" type="password" name="password_confirm" required>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="agree" value="1" required>
+          <span>Saya menyatakan data yang diisi benar dan menyetujui ketentuan penggunaan portal BKK.</span>
+        </label>
+      </fieldset>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Buat Akun</button>
+      <p class="center small muted mt-2">Sudah punya akun? <a href="/masuk">Masuk</a></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

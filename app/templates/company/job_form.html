@@ -1,0 +1,153 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}{{ 'Ubah' if job else 'Pasang' }} Lowongan{% endblock %}
+{% block sidebar %}{% include "partials/nav_company.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/perusahaan/lowongan">Lowongan Saya</a> › {{ 'Ubah' if job else 'Baru' }}</div>
+    <h1>{{ 'Ubah Lowongan' if job else 'Pasang Lowongan Baru' }}</h1>
+    <p>
+      {% if settings.require_job_approval %}
+        Lowongan akan ditinjau admin BKK sebelum tayang di portal publik.
+      {% else %}Lowongan langsung tayang setelah disimpan.{% endif %}
+    </p>
+  </div>
+  {% if job %}<span class="badge {{ job.status | badge_lowongan }}">{{ job.status | label_status_lowongan }}</span>{% endif %}
+</div>
+
+{% if job and job.review_note %}
+<div class="alert alert-warning mb-3"><span>💬</span><span>Catatan admin: {{ job.review_note }}</span></div>
+{% endif %}
+
+<form method="post" action="/perusahaan/lowongan/simpan">
+  <input type="hidden" name="job_id" value="{{ job.id if job else '' }}">
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Informasi Utama</h2></div>
+    <div class="card-body">
+      <div class="field">
+        <label for="title">Judul posisi <span class="req">*</span></label>
+        <input id="title" type="text" name="title" required value="{{ job.title if job else '' }}"
+               placeholder="mis. Operator Produksi / Staf Administrasi">
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label for="employment_type">Tipe pekerjaan</label>
+          <select id="employment_type" name="employment_type">
+            {% for e, label in EMPLOYMENT_LABEL.items() %}
+              <option value="{{ e.value }}" {{ 'selected' if job and job.employment_type == e }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Lokasi penempatan <span class="req">*</span></label>
+          <input id="location" type="text" name="location" required value="{{ job.location if job else '' }}"
+                 placeholder="Kota / kabupaten">
+        </div>
+        <div class="field">
+          <label for="quota">Jumlah dibutuhkan</label>
+          <input id="quota" type="number" name="quota" min="1" value="{{ job.quota if job else 1 }}">
+        </div>
+      </div>
+      <label class="check">
+        <input type="checkbox" name="is_remote" value="1" {{ 'checked' if job and job.is_remote }}>
+        <span>Pekerjaan dapat dilakukan jarak jauh (remote / hybrid).</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Deskripsi &amp; Persyaratan</h2></div>
+    <div class="card-body">
+      <div class="field">
+        <label for="description">Deskripsi pekerjaan <span class="req">*</span></label>
+        <textarea id="description" name="description" required style="min-height:160px"
+                  placeholder="Uraikan tugas dan tanggung jawab harian…">{{ job.description if job else '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="requirements">Kualifikasi &amp; persyaratan</label>
+        <textarea id="requirements" name="requirements" style="min-height:130px"
+                  placeholder="- Lulusan SMK jurusan …&#10;- Bersedia kerja sistem shift&#10;- Memiliki SIM C">{{ job.requirements if job else '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="benefits">Fasilitas &amp; benefit</label>
+        <textarea id="benefits" name="benefits" style="min-height:100px"
+                  placeholder="- BPJS Ketenagakerjaan &amp; Kesehatan&#10;- Uang makan &amp; transport&#10;- Mess karyawan">{{ job.benefits if job else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Kriteria Kandidat</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="field">
+          <label for="major_target">Kompetensi keahlian yang dicari</label>
+          <select id="major_target" name="major_target">
+            <option value="">Semua jurusan</option>
+            {% for m in MAJORS %}
+              <option value="{{ m }}" {{ 'selected' if job and job.major_target == m }}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="min_education">Pendidikan minimal</label>
+          <input id="min_education" type="text" name="min_education"
+                 value="{{ job.min_education if job else 'SMK/SMA Sederajat' }}">
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label for="gender_pref">Preferensi jenis kelamin</label>
+          <select id="gender_pref" name="gender_pref">
+            {% for g in ['Semua','Laki-laki','Perempuan'] %}
+              <option value="{{ g }}" {{ 'selected' if job and job.gender_pref == g }}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="max_age">Usia maksimal</label>
+          <input id="max_age" type="number" name="max_age" min="16" max="70" value="{{ job.max_age or '' if job else '' }}">
+        </div>
+        <div class="field">
+          <label for="deadline">Batas akhir lamaran</label>
+          <input id="deadline" type="date" name="deadline" value="{{ job.deadline or '' if job else '' }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Kompensasi</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="field">
+          <label for="salary_min">Gaji minimum (Rp)</label>
+          <input id="salary_min" type="text" inputmode="numeric" name="salary_min"
+                 value="{{ job.salary_min | int if job and job.salary_min else '' }}" placeholder="2400000">
+        </div>
+        <div class="field">
+          <label for="salary_max">Gaji maksimum (Rp)</label>
+          <input id="salary_max" type="text" inputmode="numeric" name="salary_max"
+                 value="{{ job.salary_max | int if job and job.salary_max else '' }}" placeholder="3200000">
+        </div>
+      </div>
+      <label class="check">
+        <input type="checkbox" name="salary_hidden" value="1" {{ 'checked' if job and job.salary_hidden }}>
+        <span>Sembunyikan nominal gaji (tampilkan sebagai "Negosiasi").</span>
+      </label>
+      <div class="help">Mencantumkan rentang gaji terbukti meningkatkan jumlah pelamar yang relevan.</div>
+    </div>
+    <div class="card-foot flex between items-center wrap gap">
+      <a href="/perusahaan/lowongan" class="btn btn-ghost">Batal</a>
+      <div class="btn-group">
+        <button class="btn btn-outline" type="submit" name="aksi" value="draft">💾 Simpan sebagai draf</button>
+        <button class="btn btn-primary" type="submit" name="aksi" value="submit">
+          {{ '📤 Kirim untuk ditinjau' if settings.require_job_approval else '🚀 Tayangkan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

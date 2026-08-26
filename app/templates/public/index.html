@@ -1,0 +1,160 @@
+{% extends "layout/base.html" %}
+{% block title %}Beranda{% endblock %}
+
+{% block body %}
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">🎓 Portal Resmi BKK {{ settings.school_name }}</span>
+    <h1>Temukan Karier Pertamamu Bersama Mitra Industri Sekolah</h1>
+    <p class="lead">
+      Semua lowongan di portal ini diverifikasi terlebih dahulu oleh pengelola BKK sekolah,
+      sehingga alumni terhindar dari informasi kerja palsu.
+    </p>
+
+    <form class="search-bar" action="/lowongan" method="get">
+      <input type="search" name="q" placeholder="Posisi, kata kunci, atau perusahaan">
+      <input type="text" name="lokasi" placeholder="Kota / kabupaten">
+      <select name="jurusan">
+        <option value="">Semua Kompetensi Keahlian</option>
+        {% for m in MAJORS %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-accent" type="submit">🔍 Cari Lowongan</button>
+    </form>
+
+    <div class="hero-stats">
+      <div><b>{{ stats.lowongan }}</b><span>Lowongan aktif</span></div>
+      <div><b>{{ stats.perusahaan }}</b><span>Perusahaan mitra</span></div>
+      <div><b>{{ stats.pelamar }}</b><span>Pencari kerja terdaftar</span></div>
+      <div><b>{{ stats.penempatan }}</b><span>Alumni tersalurkan</span></div>
+    </div>
+  </div>
+</section>
+
+{% if announcements %}
+<section class="section" style="padding-bottom:0">
+  <div class="container">
+    <div class="grid grid-3">
+      {% for a in announcements %}
+      <div class="card">
+        <div class="card-body">
+          <span class="badge accent">📢 Pengumuman</span>
+          <h3 class="mt-1">{{ a.title }}</h3>
+          <p class="small muted">{{ a.body[:160] }}{% if a.body|length > 160 %}…{% endif %}</p>
+          <small class="muted">{{ a.created_at | tanggal }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow-dark">Lowongan Terbaru</span>
+        <h2>Peluang kerja yang baru dibuka</h2>
+        <p>Diperbarui setiap kali mitra industri mengirimkan permintaan tenaga kerja.</p>
+      </div>
+      <a href="/lowongan" class="btn btn-outline">Lihat Semua Lowongan →</a>
+    </div>
+
+    {% if jobs %}
+      <div class="grid grid-2">
+        {% for job in jobs %}{% include "partials/job_card.html" %}{% endfor %}
+      </div>
+    {% else %}
+      {% with ico='🗂️', judul='Belum ada lowongan tayang',
+              pesan='Pengelola BKK sedang memverifikasi permintaan tenaga kerja dari mitra industri.' %}
+        {% include "partials/empty.html" %}
+      {% endwith %}
+    {% endif %}
+  </div>
+</section>
+
+{% if top_majors %}
+<section class="section" style="background:var(--surface);border-block:1px solid var(--line)">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow-dark">Berdasarkan Jurusan</span>
+        <h2>Lowongan sesuai kompetensi keahlian</h2>
+      </div>
+    </div>
+    <div class="chips">
+      {% for nama, jumlah in top_majors %}
+        <a class="chip" href="/lowongan?jurusan={{ nama | urlencode }}">🎓 {{ nama }} <b>{{ jumlah }}</b></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow-dark">Alur Layanan</span>
+        <h2>Tiga langkah menuju penempatan kerja</h2>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="card"><div class="card-body">
+        <div style="font-size:1.8rem">1️⃣</div>
+        <h3>Daftar &amp; lengkapi profil</h3>
+        <p class="small muted">Alumni membuat akun, mengisi data diri, kompetensi, dan mengunggah CV dalam format PDF.</p>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div style="font-size:1.8rem">2️⃣</div>
+        <h3>Lamar lowongan terverifikasi</h3>
+        <p class="small muted">Pilih lowongan yang sesuai jurusan, kirim lamaran, dan pantau statusnya secara langsung.</p>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div style="font-size:1.8rem">3️⃣</div>
+        <h3>Seleksi &amp; penempatan</h3>
+        <p class="small muted">Perusahaan menyeleksi berkas, menjadwalkan wawancara, lalu BKK mencatat hasil penempatan.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+{% if partners %}
+<section class="section" style="background:var(--surface);border-top:1px solid var(--line)">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow-dark">Mitra DUDI</span>
+        <h2>Perusahaan yang bekerja sama</h2>
+      </div>
+      <a href="/perusahaan-mitra" class="btn btn-ghost">Semua mitra →</a>
+    </div>
+    <div class="chips">
+      {% for c in partners %}
+        <a class="chip" href="/perusahaan-mitra/{{ c.slug }}">🏢 {{ c.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="container">
+    <div class="card" style="background:linear-gradient(135deg,var(--brand-900),var(--brand-600));border:0">
+      <div class="card-body flex between items-center wrap gap">
+        <div style="color:#fff">
+          <h2 style="color:#fff">Perusahaan? Pasang lowongan gratis.</h2>
+          <p style="color:#cfe0f3;margin:0;max-width:52ch">
+            Daftarkan perusahaan Anda, tunggu verifikasi pengelola BKK, lalu publikasikan kebutuhan tenaga kerja
+            langsung ke lulusan {{ settings.school_name }}.
+          </p>
+        </div>
+        <div class="btn-group">
+          <a href="/daftar/perusahaan" class="btn btn-accent btn-lg">Daftar Perusahaan</a>
+          <a href="/tentang" class="btn btn-outline btn-lg">Pelajari Dulu</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

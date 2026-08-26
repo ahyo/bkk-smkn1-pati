@@ -1,0 +1,143 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Profil & CV{% endblock %}
+{% block sidebar %}{% include "partials/nav_seeker.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Profil &amp; CV</h1><p>Data ini yang dilihat perusahaan ketika Anda melamar.</p></div>
+  <div class="right">
+    <div class="tiny muted">Kelengkapan profil</div>
+    <div class="strong" style="font-size:1.2rem">{{ seeker.completeness }}%</div>
+  </div>
+</div>
+
+<div class="progress mb-3"><span style="width:{{ seeker.completeness }}%"></span></div>
+
+<form method="post" action="/pelamar/profil" enctype="multipart/form-data">
+  <div class="card mb-3">
+    <div class="card-head"><h2>Identitas</h2></div>
+    <div class="card-body">
+      <div class="flex gap items-center wrap mb-3">
+        <div class="avatar avatar-xl">
+          {% if seeker.photo %}<img src="{{ url_for('static', path=seeker.photo) }}" alt="">
+          {% else %}{{ current_user.full_name[:1] | upper }}{% endif %}
+        </div>
+        <div style="flex:1;min-width:220px">
+          <label for="photo">Foto profil</label>
+          <input id="photo" type="file" name="photo" accept=".jpg,.jpeg,.png,.webp">
+          <div class="help file-hint">JPG/PNG/WebP, maksimal {{ settings.max_upload_mb }} MB.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="full_name">Nama lengkap <span class="req">*</span></label>
+        <input id="full_name" type="text" name="full_name" value="{{ current_user.full_name }}" required>
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label for="nis">NIS / NISN</label>
+          <input id="nis" type="text" name="nis" value="{{ seeker.nis or '' }}">
+        </div>
+        <div class="field">
+          <label for="phone">Nomor WhatsApp</label>
+          <input id="phone" type="tel" name="phone" value="{{ seeker.phone or '' }}">
+        </div>
+        <div class="field">
+          <label for="gender">Jenis kelamin</label>
+          <select id="gender" name="gender">
+            <option value="">— pilih —</option>
+            <option value="L" {{ 'selected' if seeker.gender == 'L' }}>Laki-laki</option>
+            <option value="P" {{ 'selected' if seeker.gender == 'P' }}>Perempuan</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label for="birth_place">Tempat lahir</label>
+          <input id="birth_place" type="text" name="birth_place" value="{{ seeker.birth_place or '' }}">
+        </div>
+        <div class="field">
+          <label for="birth_date">Tanggal lahir</label>
+          <input id="birth_date" type="date" name="birth_date" value="{{ seeker.birth_date or '' }}">
+        </div>
+        <div class="field">
+          <label for="city">Domisili (kota)</label>
+          <input id="city" type="text" name="city" value="{{ seeker.city or '' }}">
+        </div>
+      </div>
+      <div class="field">
+        <label for="address">Alamat lengkap</label>
+        <textarea id="address" name="address" style="min-height:70px">{{ seeker.address or '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Pendidikan &amp; Kompetensi</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="field">
+          <label for="major">Kompetensi keahlian</label>
+          <select id="major" name="major">
+            <option value="">— pilih —</option>
+            {% for m in MAJORS %}<option value="{{ m }}" {{ 'selected' if seeker.major == m }}>{{ m }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="graduation_year">Tahun lulus</label>
+          <input id="graduation_year" type="number" name="graduation_year" min="1990" max="2100"
+                 value="{{ seeker.graduation_year or '' }}">
+        </div>
+      </div>
+      <div class="field">
+        <label for="headline">Headline profil</label>
+        <input id="headline" type="text" name="headline" maxlength="180" value="{{ seeker.headline or '' }}"
+               placeholder="Contoh: Lulusan TKJ — siap kerja di bidang jaringan &amp; helpdesk">
+      </div>
+      <div class="field">
+        <label for="summary">Ringkasan diri</label>
+        <textarea id="summary" name="summary" maxlength="1200" placeholder="Ceritakan singkat kelebihan dan minat karier Anda…">{{ seeker.summary or '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="skills">Keahlian</label>
+        <input id="skills" type="text" name="skills" value="{{ seeker.skills or '' }}"
+               placeholder="Pisahkan dengan koma: Microsoft Office, Jaringan LAN, Desain Grafis">
+        <div class="help">Dipakai perusahaan saat mencari kandidat.</div>
+      </div>
+      <div class="field">
+        <label for="education">Riwayat pendidikan</label>
+        <textarea id="education" name="education" style="min-height:90px"
+                  placeholder="2021–2024 · SMK Negeri 1 Pati — Teknik Komputer dan Jaringan">{{ seeker.education or '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="experience">Pengalaman kerja / PKL</label>
+        <textarea id="experience" name="experience" style="min-height:90px"
+                  placeholder="2023 · PKL di PT Contoh Sejahtera — teknisi jaringan (6 bulan)">{{ seeker.experience or '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Dokumen &amp; Status</h2></div>
+    <div class="card-body">
+      <div class="field">
+        <label for="cv_file">Curriculum Vitae (CV)</label>
+        <input id="cv_file" type="file" name="cv_file" accept=".pdf,.doc,.docx">
+        <div class="help file-hint">
+          {% if seeker.cv_file %}
+            CV saat ini: <a href="{{ url_for('static', path=seeker.cv_file) }}" target="_blank">lihat berkas</a> — unggah baru untuk mengganti.
+          {% else %}Belum ada CV. Format PDF/DOC/DOCX, maksimal {{ settings.max_upload_mb }} MB.{% endif %}
+        </div>
+      </div>
+      <label class="check">
+        <input type="checkbox" name="open_to_work" value="1" {{ 'checked' if seeker.open_to_work }}>
+        <span>Saya sedang terbuka untuk peluang kerja (tampil sebagai kandidat aktif).</span>
+      </label>
+    </div>
+    <div class="card-foot flex between items-center wrap gap">
+      <small class="muted">Perubahan langsung berlaku pada lamaran berikutnya.</small>
+      <button class="btn btn-primary" type="submit">💾 Simpan Profil</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

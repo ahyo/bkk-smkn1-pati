@@ -1,0 +1,34 @@
+{# Kartu lowongan yang dipakai di beranda, daftar lowongan, dan dashboard. #}
+<article class="job-card">
+  <div class="logo-box">
+    {% if job.company.logo %}
+      <img src="{{ url_for('static', path=job.company.logo) }}" alt="{{ job.company.name }}">
+    {% else %}{{ job.company.initials }}{% endif %}
+  </div>
+  <div class="job-main">
+    <h3><a href="/lowongan/{{ job.slug }}">{{ job.title }}</a></h3>
+    <div class="job-company">
+      <a href="/perusahaan-mitra/{{ job.company.slug }}">{{ job.company.name }}</a>
+      {% if job.company.is_verified %}<span title="Terverifikasi BKK">✅</span>{% endif %}
+    </div>
+    <div class="job-meta">
+      <span>📍 {{ job.location }}{% if job.is_remote %} · Remote{% endif %}</span>
+      <span>💼 {{ job.employment_type | label_kerja }}</span>
+      {% if job.major_target %}<span>🎓 {{ job.major_target }}</span>{% endif %}
+      <span>👥 {{ job.quota }} orang</span>
+    </div>
+    <div class="job-salary">💰 {{ job.salary_display }}</div>
+    <div class="job-foot">
+      <div class="chips">
+        {% if job.deadline %}
+          <span class="chip">⏳ Tutup {{ job.deadline | tanggal }}</span>
+        {% else %}
+          <span class="chip">⏳ Tanpa batas waktu</span>
+        {% endif %}
+        <span class="chip">👁️ {{ job.views or 0 }} dilihat</span>
+        {% if job.published_at %}<span class="chip">🕒 {{ job.published_at | waktu_lalu }}</span>{% endif %}
+      </div>
+      <a href="/lowongan/{{ job.slug }}" class="btn btn-outline btn-sm">Lihat Detail →</a>
+    </div>
+  </div>
+</article>

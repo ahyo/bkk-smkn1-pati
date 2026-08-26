@@ -1,0 +1,107 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Kelola Pengguna{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Kelola Pengguna</h1><p>{{ meta.total }} akun terdaftar.</p></div>
+</div>
+
+<div class="tabs">
+  <a href="/admin/pengguna" class="{{ 'active' if not role }}">Semua</a>
+  <a href="?role=seeker" class="{{ 'active' if role == 'seeker' }}">Pencari Kerja</a>
+  <a href="?role=company" class="{{ 'active' if role == 'company' }}">Perusahaan</a>
+  <a href="?role=admin" class="{{ 'active' if role == 'admin' }}">Admin</a>
+</div>
+
+<div class="grid grid-2 mb-3">
+  <div class="filter-bar mb-0">
+    <form method="get">
+      <input type="hidden" name="role" value="{{ role }}">
+      <div>
+        <label class="label" for="q">Cari nama / email</label>
+        <input id="q" type="search" name="q" value="{{ q }}">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" type="submit">Cari</button>
+        <a href="/admin/pengguna" class="btn btn-ghost">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Tambah akun admin</h3></div>
+    <div class="card-body">
+      <form method="post" action="/admin/pengguna/baru" class="form-row-3" style="align-items:end">
+        <div class="field mb-0">
+          <label for="full_name">Nama</label>
+          <input id="full_name" type="text" name="full_name" required>
+        </div>
+        <div class="field mb-0">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" required>
+        </div>
+        <div class="field mb-0">
+          <label for="password">Kata sandi</label>
+          <input id="password" type="password" name="password" required>
+        </div>
+        <button class="btn btn-dark" type="submit" style="grid-column:1/-1">Tambah Admin</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Pengguna</th><th>Peran</th><th>Detail</th><th>Terdaftar</th><th>Login terakhir</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div class="cell-main">{{ u.display_name }}</div>
+            <div class="cell-sub">{{ u.email }}</div>
+          </td>
+          <td>
+            <span class="badge {{ 'accent' if u.role == Role.ADMIN else ('info' if u.role == Role.COMPANY else 'ok') }}">
+              {{ {'admin':'Admin','company':'Perusahaan','seeker':'Pencari Kerja'}[u.role.value] }}
+            </span>
+          </td>
+          <td class="cell-sub">
+            {% if u.role == Role.COMPANY and u.company %}
+              {{ u.company.industry or '-' }} · {{ u.company.city or '-' }}<br>
+              <span class="badge {{ u.company.status | badge_perusahaan }}">{{ u.company.status | label_status_perusahaan }}</span>
+            {% elif u.role == Role.SEEKER and u.seeker %}
+              {{ u.seeker.major or '-' }}{% if u.seeker.graduation_year %} · lulus {{ u.seeker.graduation_year }}{% endif %}<br>
+              profil {{ u.seeker.completeness }}% lengkap
+            {% else %}Administrator portal{% endif %}
+          </td>
+          <td class="nowrap cell-sub">{{ u.created_at | tanggal }}</td>
+          <td class="nowrap cell-sub">{{ u.last_login_at | waktu_lalu if u.last_login_at else 'belum pernah' }}</td>
+          <td><span class="badge {{ 'ok' if u.is_active else 'muted' }}">{{ 'Aktif' if u.is_active else 'Nonaktif' }}</span></td>
+          <td>
+            <div class="cell-actions">
+              <form method="post" action="/admin/pengguna/{{ u.id }}/aktif"
+                    data-confirm="{{ 'Nonaktifkan' if u.is_active else 'Aktifkan' }} akun {{ u.email }}?">
+                <button class="btn btn-outline btn-sm" type="submit">{{ 'Nonaktifkan' if u.is_active else 'Aktifkan' }}</button>
+              </form>
+              <form method="post" action="/admin/pengguna/{{ u.id }}/reset-sandi" class="flex gap-sm"
+                    data-confirm="Reset kata sandi {{ u.email }}?">
+                <input type="password" name="new_password" placeholder="Sandi baru" required style="width:130px">
+                <button class="btn btn-ghost btn-sm" type="submit">Reset</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="center muted">Tidak ada pengguna pada filter ini.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% set base_query = 'role=' ~ role ~ '&q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Pemantauan Lamaran{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Pemantauan Lamaran</h1><p>{{ meta.total }} lamaran tercatat di seluruh portal.</p></div>
+  <a href="/admin/laporan/ekspor?jenis=lamaran" class="btn btn-outline">⬇️ Ekspor CSV</a>
+</div>
+
+<div class="tabs">
+  <a href="/admin/lamaran" class="{{ 'active' if not status_filter }}">Semua</a>
+  {% for s, label in APPLICATION_STATUS_LABEL.items() %}
+    <a href="?status_filter={{ s.value }}" class="{{ 'active' if status_filter == s.value }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+    <div>
+      <label class="label" for="q">Cari pelamar / lowongan</label>
+      <input id="q" type="search" name="q" value="{{ q }}">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" type="submit">Cari</button>
+      <a href="/admin/lamaran" class="btn btn-ghost">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Pelamar</th><th>Jurusan</th><th>Lowongan</th><th>Perusahaan</th><th>Tanggal</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for a in apps %}
+        <tr>
+          <td>
+            <div class="cell-main">{{ a.seeker.user.full_name }}</div>
+            <div class="cell-sub">{{ a.seeker.user.email }}{% if a.seeker.nis %} · NIS {{ a.seeker.nis }}{% endif %}</div>
+          </td>
+          <td class="cell-sub">
+            {{ a.seeker.major or '-' }}
+            {% if a.seeker.graduation_year %}<div class="tiny">lulus {{ a.seeker.graduation_year }}</div>{% endif %}
+          </td>
+          <td><a href="/lowongan/{{ a.job.slug }}" target="_blank">{{ a.job.title }}</a></td>
+          <td class="cell-sub">{{ a.job.company.name if a.job.company else '-' }}</td>
+          <td class="nowrap cell-sub">{{ a.created_at | tanggal }}</td>
+          <td><span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="center muted">Belum ada lamaran pada filter ini.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% set base_query = 'status_filter=' ~ status_filter ~ '&q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% endblock %}

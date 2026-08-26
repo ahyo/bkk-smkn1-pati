@@ -1,0 +1,14 @@
+{% set p = request.url.path %}
+<div class="sidebar-label">Pencari Kerja</div>
+<nav>
+  <a href="/pelamar" class="{{ 'active' if p == '/pelamar' or p == '/pelamar/' }}"><span class="ico">🎯</span> Ringkasan</a>
+  <a href="/pelamar/lamaran" class="{{ 'active' if p.startswith('/pelamar/lamaran') }}"><span class="ico">📨</span> Lamaran Saya</a>
+  <a href="/pelamar/tersimpan" class="{{ 'active' if p.startswith('/pelamar/tersimpan') }}"><span class="ico">🔖</span> Tersimpan</a>
+  <a href="/pelamar/profil" class="{{ 'active' if p.startswith('/pelamar/profil') }}"><span class="ico">👤</span> Profil &amp; CV</a>
+</nav>
+<div class="sidebar-label">Jelajahi</div>
+<nav>
+  <a href="/lowongan"><span class="ico">🔍</span> Cari Lowongan</a>
+  <a href="/perusahaan-mitra"><span class="ico">🏢</span> Perusahaan Mitra</a>
+  <a href="/akun/kata-sandi"><span class="ico">🔑</span> Kata Sandi</a>
+</nav>

@@ -1,0 +1,42 @@
+{% extends "layout/base.html" %}
+{% block title %}Daftar Akun{% endblock %}
+
+{% block content %}
+<div class="center mb-3">
+  <span class="eyebrow-dark">Pendaftaran</span>
+  <h1>Daftar sebagai apa?</h1>
+  <p class="muted">Pilih jenis akun sesuai kebutuhan Anda.</p>
+</div>
+
+<div class="role-cards">
+  <div class="role-card">
+    <div class="ico">🎓</div>
+    <h2>Pencari Kerja</h2>
+    <p class="small muted">Untuk alumni dan siswa tingkat akhir {{ settings.school_name }}.</p>
+    <ul>
+      <li>Buat profil &amp; unggah CV</li>
+      <li>Lamar lowongan terverifikasi</li>
+      <li>Pantau status seleksi secara real time</li>
+      <li>Simpan lowongan favorit</li>
+    </ul>
+    <a href="/daftar/pencari-kerja" class="btn btn-primary btn-block">Daftar Pencari Kerja</a>
+  </div>
+
+  <div class="role-card">
+    <div class="ico">🏢</div>
+    <h2>Perusahaan</h2>
+    <p class="small muted">Untuk mitra dunia usaha dan dunia industri (DUDI).</p>
+    <ul>
+      <li>Pasang lowongan tanpa biaya</li>
+      <li>Kelola pelamar dalam satu papan</li>
+      <li>Jadwalkan wawancara &amp; ubah status</li>
+      <li>Profil mitra tampil di portal sekolah</li>
+    </ul>
+    <a href="/daftar/perusahaan" class="btn btn-dark btn-block">Daftar Perusahaan</a>
+  </div>
+</div>
+
+<p class="center mt-3 muted small">
+  Akun admin BKK dibuat oleh pengelola sekolah. Sudah punya akun? <a href="/masuk">Masuk di sini</a>.
+</p>
+{% endblock %}

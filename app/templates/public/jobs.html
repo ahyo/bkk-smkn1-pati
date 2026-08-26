@@ -1,0 +1,70 @@
+{% extends "layout/base.html" %}
+{% block title %}Daftar Lowongan{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/">Beranda</a> › Lowongan</div>
+    <h1>Daftar Lowongan Kerja</h1>
+    <p>{{ meta.total }} lowongan aktif terverifikasi pengelola BKK.</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="get" action="/lowongan">
+    <div>
+      <label class="label" for="q">Kata kunci</label>
+      <input id="q" type="search" name="q" value="{{ filters.q }}" placeholder="Posisi / perusahaan">
+    </div>
+    <div>
+      <label class="label" for="lokasi">Lokasi</label>
+      <input id="lokasi" type="text" name="lokasi" value="{{ filters.lokasi }}" list="lokasi-list" placeholder="Semua kota">
+      <datalist id="lokasi-list">{% for l in locations %}<option value="{{ l }}">{% endfor %}</datalist>
+    </div>
+    <div>
+      <label class="label" for="jurusan">Kompetensi keahlian</label>
+      <select id="jurusan" name="jurusan">
+        <option value="">Semua jurusan</option>
+        {% for m in MAJORS %}<option value="{{ m }}" {{ 'selected' if filters.jurusan == m }}>{{ m }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="tipe">Tipe kerja</label>
+      <select id="tipe" name="tipe">
+        <option value="">Semua tipe</option>
+        {% for e, label in EMPLOYMENT_LABEL.items() %}
+          <option value="{{ e.value }}" {{ 'selected' if filters.tipe == e.value }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="urut">Urutkan</label>
+      <select id="urut" name="urut">
+        <option value="terbaru" {{ 'selected' if filters.urut == 'terbaru' }}>Terbaru</option>
+        <option value="gaji" {{ 'selected' if filters.urut == 'gaji' }}>Gaji tertinggi</option>
+        <option value="deadline" {{ 'selected' if filters.urut == 'deadline' }}>Segera ditutup</option>
+      </select>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" type="submit">Terapkan</button>
+      <a href="/lowongan" class="btn btn-ghost">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if jobs %}
+  <div class="grid">
+    {% for job in jobs %}{% include "partials/job_card.html" %}{% endfor %}
+  </div>
+  {% set base_query = 'q=' ~ filters.q|urlencode ~ '&lokasi=' ~ filters.lokasi|urlencode ~ '&jurusan=' ~ filters.jurusan|urlencode ~ '&tipe=' ~ filters.tipe|urlencode ~ '&urut=' ~ filters.urut|urlencode ~ '&' %}
+  {% include "partials/pagination.html" %}
+{% else %}
+  <div class="card">
+    {% with ico='🔍', judul='Tidak ada lowongan yang cocok',
+            pesan='Coba ubah kata kunci, longgarkan filter jurusan, atau kosongkan lokasi.',
+            aksi_url='/lowongan', aksi_label='Reset Pencarian' %}
+      {% include "partials/empty.html" %}
+    {% endwith %}
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Dashboard Perusahaan{% endblock %}
+{% block sidebar %}{% include "partials/nav_company.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div>
+    <h1>{{ company.name }}</h1>
+    <p>Ringkasan rekrutmen melalui BKK {{ settings.school_name }}.</p>
+  </div>
+  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a>
+</div>
+
+{% if not company.is_verified %}
+<div class="alert alert-{{ 'danger' if company.status == CompanyStatus.REJECTED else 'warning' }} mb-3">
+  <span>{{ '⛔' if company.status == CompanyStatus.REJECTED else '⏳' }}</span>
+  <span>
+    Status akun: <b>{{ company.status | label_status_perusahaan }}</b>.
+    {% if company.status == CompanyStatus.PENDING %}
+      Pengelola BKK sedang memverifikasi data perusahaan Anda. Lengkapi
+      <a href="/perusahaan/profil">profil perusahaan</a> agar proses lebih cepat.
+    {% elif company.verification_note %}
+      Catatan admin: {{ company.verification_note }}
+    {% endif %}
+  </span>
+</div>
+{% endif %}
+
+<div class="grid grid-4 mb-3">
+  <div class="stat"><div class="label">Lowongan tayang</div><div class="value">{{ stats.tayang }}</div>
+    <div class="hint">{{ stats.menunggu }} menunggu persetujuan</div></div>
+  <div class="stat accent"><div class="label">Total pelamar</div><div class="value">{{ stats.pelamar }}</div>
+    <div class="hint">{{ stats.baru }} lamaran baru</div></div>
+  <div class="stat ok"><div class="label">Diterima</div><div class="value">{{ stats.diterima }}</div></div>
+  <div class="stat warn"><div class="label">Total dilihat</div><div class="value">{{ stats.views }}</div>
+    <div class="hint">akumulasi semua lowongan</div></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-head">
+    <h2>Pelamar terbaru</h2>
+    <a href="/perusahaan/pelamar" class="btn btn-ghost btn-sm">Semua pelamar →</a>
+  </div>
+  {% if pelamar_terbaru %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Pelamar</th><th>Posisi dilamar</th><th>Jurusan</th><th>Tanggal</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for a in pelamar_terbaru %}
+        <tr>
+          <td>
+            <div class="flex gap-sm items-center">
+              <span class="avatar">
+                {% if a.seeker.photo %}<img src="{{ url_for('static', path=a.seeker.photo) }}" alt="">
+                {% else %}{{ a.seeker.user.full_name[:1] | upper }}{% endif %}
+              </span>
+              <div><div class="cell-main">{{ a.seeker.user.full_name }}</div>
+                   <div class="cell-sub">{{ a.seeker.headline or a.seeker.user.email }}</div></div>
+            </div>
+          </td>
+          <td>{{ a.job.title }}</td>
+          <td class="cell-sub">{{ a.seeker.major or '-' }}</td>
+          <td class="nowrap cell-sub">{{ a.created_at | tanggal }}</td>
+          <td><span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span></td>
+          <td class="right"><a class="btn btn-outline btn-sm" href="/perusahaan/pelamar/{{ a.id }}">Tinjau</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% with ico='👥', judul='Belum ada pelamar', pesan='Pelamar akan muncul setelah lowongan Anda tayang.' %}
+      {% include "partials/empty.html" %}
+    {% endwith %}
+  {% endif %}
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head"><h2>Lowongan aktif</h2><a href="/perusahaan/lowongan" class="btn btn-ghost btn-sm">Kelola →</a></div>
+    <div class="card-body">
+      {% if lowongan_aktif %}
+        {% for j in lowongan_aktif %}
+        <div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+          <div style="min-width:0">
+            <div class="cell-main truncate"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
+            <div class="cell-sub">📍 {{ j.location }} · ⏳ {{ j.deadline | tanggal if j.deadline else 'tanpa batas' }}</div>
+          </div>
+          <a class="badge info nowrap" href="/perusahaan/pelamar?job_id={{ j.id }}">{{ counts.get(j.id, 0) }} pelamar</a>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="muted center">Belum ada lowongan tayang.</p>
+        <a href="/perusahaan/lowongan/baru" class="btn btn-primary btn-block mt-2">Pasang Lowongan Pertama</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Corong seleksi</h2></div>
+    <div class="card-body">
+      {% set total = stats.pelamar or 1 %}
+      {% for s, label in APPLICATION_STATUS_LABEL.items() %}
+        {% set n = by_app_status.get(s, 0) %}
+        <div class="hbar">
+          <div>
+            <div class="flex between"><span>{{ label }}</span><b>{{ n }}</b></div>
+            <div class="track"><i style="width:{{ (n / total * 100) | round(1) }}%"></i></div>
+          </div>
+          <span class="tiny muted right">{{ (n / total * 100) | round(0) | int }}%</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

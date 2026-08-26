@@ -1,0 +1,63 @@
+{% extends "layout/base.html" %}
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb"><a href="/">Beranda</a> › <a href="/perusahaan-mitra">Perusahaan Mitra</a> › {{ company.name }}</div>
+
+<div class="card mb-3">
+  <div class="card-body flex gap items-center wrap">
+    <div class="avatar-xl logo-box" style="width:96px;height:96px">
+      {% if company.logo %}<img src="{{ url_for('static', path=company.logo) }}" alt="">{% else %}{{ company.initials }}{% endif %}
+    </div>
+    <div style="flex:1;min-width:220px">
+      <h1 style="margin-bottom:.25rem">{{ company.name }}</h1>
+      <div class="chips">
+        <span class="badge ok badge-dot">Mitra Terverifikasi</span>
+        {% if company.industry %}<span class="chip">🏭 {{ company.industry }}</span>{% endif %}
+        {% if company.city %}<span class="chip">📍 {{ company.city }}</span>{% endif %}
+        {% if company.employee_count %}<span class="chip">👥 {{ company.employee_count }} karyawan</span>{% endif %}
+      </div>
+    </div>
+    {% if company.website %}
+      <a href="{{ company.website }}" target="_blank" rel="noopener" class="btn btn-outline">🌐 Kunjungi Situs</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="layout-side-r">
+  <div>
+    <div class="card mb-3">
+      <div class="card-head"><h2>Profil Perusahaan</h2></div>
+      <div class="card-body prose">{{ (company.description or 'Perusahaan belum melengkapi deskripsi profilnya.') | nl2br | safe }}</div>
+    </div>
+
+    <h2 class="mb-2">Lowongan aktif ({{ jobs | length }})</h2>
+    {% if jobs %}
+      <div class="grid">{% for job in jobs %}{% include "partials/job_card.html" %}{% endfor %}</div>
+    {% else %}
+      <div class="card">
+        {% with ico='📭', judul='Belum ada lowongan aktif', pesan='Perusahaan ini sedang tidak membuka lowongan.' %}
+          {% include "partials/empty.html" %}
+        {% endwith %}
+      </div>
+    {% endif %}
+  </div>
+
+  <aside>
+    <div class="card">
+      <div class="card-head"><h3>Informasi Kontak</h3></div>
+      <div class="card-body small">
+        {% if company.address %}<p>📍 {{ company.address }}</p>{% endif %}
+        {% if company.phone %}<p>☎️ {{ company.phone }}</p>{% endif %}
+        {% if company.contact_person %}<p>👤 {{ company.contact_person }}</p>{% endif %}
+        <p class="muted">Bergabung sejak {{ company.created_at | tanggal }}</p>
+        <div class="divider"></div>
+        <p class="tiny muted">
+          Pengelola BKK tidak memungut biaya apa pun dalam proses rekrutmen.
+          Laporkan bila ada permintaan pembayaran mengatasnamakan perusahaan ini.
+        </p>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "layout/base.html" %}
+{% block title %}Tentang BKK{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/">Beranda</a> › Tentang</div>
+    <h1>Tentang Bursa Kerja Khusus</h1>
+    <p>Unit layanan penempatan kerja di bawah {{ settings.school_name }}.</p>
+  </div>
+</div>
+
+<div class="grid grid-4 mb-3">
+  <div class="stat"><div class="label">Lowongan aktif</div><div class="value">{{ stats.lowongan }}</div></div>
+  <div class="stat ok"><div class="label">Perusahaan mitra</div><div class="value">{{ stats.perusahaan }}</div></div>
+  <div class="stat accent"><div class="label">Pencari kerja</div><div class="value">{{ stats.pelamar }}</div></div>
+  <div class="stat warn"><div class="label">Biaya layanan</div><div class="value">Rp0</div><div class="hint">Gratis untuk alumni</div></div>
+</div>
+
+<div class="layout-side-r">
+  <div>
+    <div class="card mb-3">
+      <div class="card-head"><h2>Apa itu BKK?</h2></div>
+      <div class="card-body prose">
+        <p>
+          Bursa Kerja Khusus (BKK) adalah lembaga yang dibentuk di satuan pendidikan kejuruan sebagai unit pelaksana
+          yang memberikan pelayanan dan informasi lowongan kerja, pelaksana pemasaran, penyaluran, serta penempatan
+          tenaga kerja bagi lulusan sekolah yang bersangkutan.
+        </p>
+        <h4>Tugas pokok</h4>
+        <p>
+          Mendata lulusan, menjalin kerja sama dengan dunia usaha dan dunia industri (DUDI), menyalurkan lulusan
+          sesuai kompetensi keahlian, serta melakukan penelusuran (tracer study) terhadap alumni yang telah bekerja.
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-3" id="alur">
+      <div class="card-head"><h2>Alur pelayanan</h2></div>
+      <div class="card-body">
+        <ul class="timeline">
+          <li class="done"><b>Perusahaan mendaftar</b><small>Mengisi profil dan data legalitas perusahaan pada portal.</small></li>
+          <li class="done"><b>Verifikasi oleh admin BKK</b><small>Pengelola memeriksa keabsahan perusahaan sebelum akun diaktifkan.</small></li>
+          <li class="done"><b>Perusahaan memasang lowongan</b><small>Lowongan diperiksa admin agar informasi tidak menyesatkan.</small></li>
+          <li class="done"><b>Alumni melamar</b><small>Pencari kerja mengirim lamaran beserta CV melalui dashboard.</small></li>
+          <li class="current"><b>Seleksi &amp; penempatan</b><small>Perusahaan memperbarui status; BKK merekap hasil penyaluran.</small></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" id="faq">
+      <div class="card-head"><h2>Tanya jawab</h2></div>
+      <div class="card-body prose">
+        <h4>Apakah layanan ini berbayar?</h4>
+        <p>Tidak. Seluruh layanan BKK gratis, baik bagi alumni maupun perusahaan mitra.</p>
+        <h4>Siapa saja yang boleh mendaftar sebagai pencari kerja?</h4>
+        <p>Utamanya alumni {{ settings.school_name }}. Siswa kelas akhir juga dapat mendaftar untuk keperluan magang/PKL.</p>
+        <h4>Berapa lama proses verifikasi perusahaan?</h4>
+        <p>Umumnya 1–3 hari kerja setelah data profil perusahaan lengkap.</p>
+        <h4>Bagaimana bila menemukan lowongan mencurigakan?</h4>
+        <p>Laporkan ke <a href="mailto:{{ settings.school_email }}">{{ settings.school_email }}</a>. Lowongan yang terbukti bermasalah akan segera dicabut.</p>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="card mb-2">
+      <div class="card-head"><h3>Hubungi pengelola</h3></div>
+      <div class="card-body small">
+        <p>📍 {{ settings.school_address }}</p>
+        <p>☎️ <a href="tel:{{ settings.school_phone }}">{{ settings.school_phone }}</a></p>
+        <p>✉️ <a href="mailto:{{ settings.school_email }}">{{ settings.school_email }}</a></p>
+        <p class="muted tiny">Jam layanan: Senin–Jumat, 07.30–15.00 WIB</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body center">
+        <h3>Siap memulai?</h3>
+        <a href="/daftar/pencari-kerja" class="btn btn-primary btn-block mt-1">Daftar sebagai Pencari Kerja</a>
+        <a href="/daftar/perusahaan" class="btn btn-outline btn-block mt-1">Daftar sebagai Perusahaan</a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

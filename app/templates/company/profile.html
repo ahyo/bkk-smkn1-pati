@@ -1,0 +1,93 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Profil Perusahaan{% endblock %}
+{% block sidebar %}{% include "partials/nav_company.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Profil Perusahaan</h1><p>Informasi ini tampil pada halaman mitra dan setiap lowongan Anda.</p></div>
+  <span class="badge {{ company.status | badge_perusahaan }}">{{ company.status | label_status_perusahaan }}</span>
+</div>
+
+{% if company.verification_note %}
+<div class="alert alert-info mb-3"><span>💬</span><span>Catatan admin BKK: {{ company.verification_note }}</span></div>
+{% endif %}
+
+<form method="post" action="/perusahaan/profil" enctype="multipart/form-data">
+  <div class="card mb-3">
+    <div class="card-head"><h2>Identitas Perusahaan</h2></div>
+    <div class="card-body">
+      <div class="flex gap items-center wrap mb-3">
+        <div class="logo-box" style="width:96px;height:96px">
+          {% if company.logo %}<img src="{{ url_for('static', path=company.logo) }}" alt="">
+          {% else %}{{ company.initials }}{% endif %}
+        </div>
+        <div style="flex:1;min-width:220px">
+          <label for="logo">Logo perusahaan</label>
+          <input id="logo" type="file" name="logo" accept=".jpg,.jpeg,.png,.webp">
+          <div class="help file-hint">JPG/PNG/WebP, maksimal {{ settings.max_upload_mb }} MB. Disarankan rasio 1:1.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="name">Nama perusahaan <span class="req">*</span></label>
+        <input id="name" type="text" name="name" required value="{{ company.name }}">
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label for="industry">Bidang usaha</label>
+          <input id="industry" type="text" name="industry" value="{{ company.industry or '' }}">
+        </div>
+        <div class="field">
+          <label for="city">Kota / kabupaten</label>
+          <input id="city" type="text" name="city" value="{{ company.city or '' }}">
+        </div>
+        <div class="field">
+          <label for="employee_count">Jumlah karyawan</label>
+          <input id="employee_count" type="text" name="employee_count" value="{{ company.employee_count or '' }}"
+                 placeholder="mis. 50–200">
+        </div>
+      </div>
+      <div class="field">
+        <label for="address">Alamat lengkap</label>
+        <textarea id="address" name="address" style="min-height:80px">{{ company.address or '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="description">Deskripsi perusahaan</label>
+        <textarea id="description" name="description" maxlength="2000" style="min-height:140px"
+                  placeholder="Ceritakan bidang usaha, budaya kerja, dan peluang karier di perusahaan Anda…">{{ company.description or '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-head"><h2>Kontak &amp; Penanggung Jawab</h2></div>
+    <div class="card-body">
+      <div class="form-row-3">
+        <div class="field">
+          <label for="contact_person">Nama PIC</label>
+          <input id="contact_person" type="text" name="contact_person" value="{{ company.contact_person or '' }}">
+        </div>
+        <div class="field">
+          <label for="phone">Telepon / WhatsApp</label>
+          <input id="phone" type="tel" name="phone" value="{{ company.phone or '' }}">
+        </div>
+        <div class="field">
+          <label for="website">Situs web</label>
+          <input id="website" type="url" name="website" value="{{ company.website or '' }}" placeholder="https://">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email akun (tidak dapat diubah sendiri)</label>
+        <input type="email" value="{{ current_user.email }}" disabled>
+        <div class="help">Hubungi admin BKK bila email perlu diganti.</div>
+      </div>
+    </div>
+    <div class="card-foot flex between items-center wrap gap">
+      {% if company.is_verified %}
+        <a href="/perusahaan-mitra/{{ company.slug }}" class="btn btn-ghost">👁️ Lihat halaman publik</a>
+      {% else %}<small class="muted">Halaman publik aktif setelah akun terverifikasi.</small>{% endif %}
+      <button class="btn btn-primary" type="submit">💾 Simpan Profil</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

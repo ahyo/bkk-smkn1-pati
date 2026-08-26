@@ -1,0 +1,95 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Pelamar{% endblock %}
+{% block sidebar %}{% include "partials/nav_company.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Pelamar</h1><p>{{ meta.total }} lamaran masuk untuk lowongan perusahaan Anda.</p></div>
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <div>
+      <label class="label" for="job_id">Lowongan</label>
+      <select id="job_id" name="job_id" data-autosubmit>
+        <option value="">Semua lowongan</option>
+        {% for j in jobs %}
+          <option value="{{ j.id }}" {{ 'selected' if job_id == j.id | string }}>{{ j.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="status_filter">Status seleksi</label>
+      <select id="status_filter" name="status_filter" data-autosubmit>
+        <option value="">Semua status</option>
+        {% for s, label in APPLICATION_STATUS_LABEL.items() %}
+          <option value="{{ s.value }}" {{ 'selected' if status_filter == s.value }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="q">Cari kandidat</label>
+      <input id="q" type="search" name="q" value="{{ q }}" placeholder="Nama / jurusan / keahlian">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" type="submit">Terapkan</button>
+      <a href="/perusahaan/pelamar" class="btn btn-ghost">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if apps %}
+<div class="grid grid-2">
+  {% for a in apps %}
+  <div class="card">
+    <div class="card-body">
+      <div class="flex gap items-center mb-2">
+        <span class="avatar avatar-lg">
+          {% if a.seeker.photo %}<img src="{{ url_for('static', path=a.seeker.photo) }}" alt="">
+          {% else %}{{ a.seeker.user.full_name[:1] | upper }}{% endif %}
+        </span>
+        <div style="min-width:0;flex:1">
+          <h3 class="truncate" style="margin:0">{{ a.seeker.user.full_name }}</h3>
+          <div class="cell-sub truncate">{{ a.seeker.headline or (a.seeker.major or 'Pencari kerja') }}</div>
+          <span class="badge {{ a.status | badge_lamaran }} mt-1">{{ a.status | label_status_lamaran }}</span>
+        </div>
+      </div>
+
+      <div class="job-meta">
+        <span>📋 {{ a.job.title }}</span>
+        <span>🎓 {{ a.seeker.major or '-' }}</span>
+        {% if a.seeker.graduation_year %}<span>🗓️ Lulus {{ a.seeker.graduation_year }}</span>{% endif %}
+        {% if a.seeker.city %}<span>📍 {{ a.seeker.city }}</span>{% endif %}
+      </div>
+
+      {% if a.seeker.skill_list %}
+      <div class="chips mt-1">
+        {% for s in a.seeker.skill_list[:4] %}<span class="chip">{{ s }}</span>{% endfor %}
+        {% if a.seeker.skill_list | length > 4 %}<span class="chip">+{{ a.seeker.skill_list | length - 4 }}</span>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="job-foot">
+        <small class="muted">Melamar {{ a.created_at | waktu_lalu }}</small>
+        <div class="btn-group">
+          {% if a.cv_file %}
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">📄 CV</a>
+          {% endif %}
+          <a class="btn btn-primary btn-sm" href="/perusahaan/pelamar/{{ a.id }}">Tinjau →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% set base_query = 'job_id=' ~ job_id ~ '&status_filter=' ~ status_filter ~ '&q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% else %}
+<div class="card">
+  {% with ico='👥', judul='Belum ada pelamar pada filter ini',
+          pesan='Ubah filter, atau pastikan lowongan Anda sudah tayang di portal.' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

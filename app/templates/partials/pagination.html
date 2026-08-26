@@ -1,0 +1,28 @@
+{# Navigasi halaman. `base_query` = querystring tanpa parameter page. #}
+{% if meta.pages > 1 %}
+{% set bq = base_query | default('') %}
+<nav class="pagination" aria-label="Navigasi halaman">
+  {% if meta.has_prev %}
+    <a href="?{{ bq }}page={{ meta.page - 1 }}">‹ Sebelumnya</a>
+  {% else %}<span class="disabled">‹ Sebelumnya</span>{% endif %}
+
+  {% for p in range(1, meta.pages + 1) %}
+    {% if p == 1 or p == meta.pages or (p >= meta.page - 2 and p <= meta.page + 2) %}
+      {% if p == meta.page %}
+        <span class="current">{{ p }}</span>
+      {% else %}
+        <a href="?{{ bq }}page={{ p }}">{{ p }}</a>
+      {% endif %}
+    {% elif p == meta.page - 3 or p == meta.page + 3 %}
+      <span class="disabled">…</span>
+    {% endif %}
+  {% endfor %}
+
+  {% if meta.has_next %}
+    <a href="?{{ bq }}page={{ meta.page + 1 }}">Berikutnya ›</a>
+  {% else %}<span class="disabled">Berikutnya ›</span>{% endif %}
+</nav>
+<p class="center small muted mt-1">Menampilkan {{ meta.start }}–{{ meta.end }} dari {{ meta.total }} data</p>
+{% elif meta.total %}
+<p class="center small muted mt-2">Total {{ meta.total }} data</p>
+{% endif %}

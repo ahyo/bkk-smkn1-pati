@@ -1,0 +1,43 @@
+name: Uji aplikasi
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bkk
+          POSTGRES_PASSWORD: bkk
+          POSTGRES_DB: bkk_smkn1pati
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg2://bkk:bkk@localhost:5432/bkk_smkn1pati
+      SECRET_KEY: kunci-uji-otomatis-yang-panjang-sekali-1234567890
+      APP_ENV: testing
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Muat data contoh
+        run: python -m app.seed --reset
+
+      - name: Uji asap seluruh rute
+        run: python scripts/smoke_test.py

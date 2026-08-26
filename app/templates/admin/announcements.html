@@ -1,0 +1,65 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Pengumuman{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Pengumuman BKK</h1><p>Tampil pada beranda portal publik.</p></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-head"><h2>Buat pengumuman baru</h2></div>
+  <div class="card-body">
+    <form method="post" action="/admin/pengumuman">
+      <div class="field">
+        <label for="title">Judul <span class="req">*</span></label>
+        <input id="title" type="text" name="title" required placeholder="mis. Rekrutmen bersama PT Contoh — 12 September">
+      </div>
+      <div class="field">
+        <label for="body">Isi pengumuman <span class="req">*</span></label>
+        <textarea id="body" name="body" required maxlength="2000" style="min-height:120px"></textarea>
+      </div>
+      <label class="check mb-2">
+        <input type="checkbox" name="is_published" value="1" checked>
+        <span>Tampilkan di beranda portal.</span>
+      </label>
+      <button class="btn btn-primary" type="submit">📢 Terbitkan</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Daftar pengumuman ({{ items | length }})</h2></div>
+  <div class="card-body">
+    {% for a in items %}
+    <div style="padding:.85rem 0;border-bottom:1px solid var(--line)">
+      <div class="flex between items-center gap wrap">
+        <div style="min-width:0;flex:1">
+          <h3 style="margin-bottom:.15rem">{{ a.title }}
+            <span class="badge {{ 'ok' if a.is_published else 'muted' }}">{{ 'Tayang' if a.is_published else 'Arsip' }}</span>
+          </h3>
+          <div class="cell-sub">{{ a.created_at | tanggal_jam }}</div>
+          <p class="small muted mt-1 mb-0">{{ a.body }}</p>
+        </div>
+        <div class="btn-group">
+          <form method="post" action="/admin/pengumuman">
+            <input type="hidden" name="ann_id" value="{{ a.id }}">
+            <input type="hidden" name="title" value="{{ a.title }}">
+            <input type="hidden" name="body" value="{{ a.body }}">
+            {% if not a.is_published %}<input type="hidden" name="is_published" value="1">{% endif %}
+            <button class="btn btn-outline btn-sm" type="submit">{{ 'Arsipkan' if a.is_published else 'Tayangkan' }}</button>
+          </form>
+          <form method="post" action="/admin/pengumuman/{{ a.id }}/hapus" data-confirm="Hapus pengumuman ini?">
+            <button class="btn btn-ghost btn-sm" type="submit">Hapus</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% else %}
+      {% with ico='📢', judul='Belum ada pengumuman', pesan='Buat pengumuman pertama pada formulir di atas.' %}
+        {% include "partials/empty.html" %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

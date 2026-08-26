@@ -1,0 +1,75 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Lamaran Saya{% endblock %}
+{% block sidebar %}{% include "partials/nav_seeker.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Lamaran Saya</h1><p>{{ meta.total }} lamaran tercatat.</p></div>
+</div>
+
+<div class="tabs">
+  <a href="/pelamar/lamaran" class="{{ 'active' if not status_filter }}">Semua</a>
+  {% for s, label in APPLICATION_STATUS_LABEL.items() %}
+    <a href="?status_filter={{ s.value }}" class="{{ 'active' if status_filter == s.value }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if apps %}
+<div class="grid">
+  {% for a in apps %}
+  <div class="card">
+    <div class="card-body">
+      <div class="flex between items-center wrap gap">
+        <div style="flex:1;min-width:230px">
+          <h3 style="margin-bottom:.15rem"><a href="/lowongan/{{ a.job.slug }}">{{ a.job.title }}</a></h3>
+          <div class="job-company">{{ a.job.company.name }}</div>
+          <div class="job-meta">
+            <span>📍 {{ a.job.location }}</span>
+            <span>💼 {{ a.job.employment_type | label_kerja }}</span>
+            <span>🕒 Dilamar {{ a.created_at | tanggal }}</span>
+          </div>
+        </div>
+        <div class="right">
+          <span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span>
+          <div class="tiny muted mt-1">Diperbarui {{ a.updated_at | waktu_lalu }}</div>
+        </div>
+      </div>
+
+      {% if a.interview_at %}
+        <div class="alert alert-warning mt-2 mb-0"><span>📅</span><span>
+          Jadwal wawancara: <b>{{ a.interview_at | tanggal_jam }}</b>
+        </span></div>
+      {% endif %}
+      {% if a.company_note %}
+        <div class="alert alert-info mt-2 mb-0"><span>💬</span><span>
+          Catatan perusahaan: {{ a.company_note }}
+        </span></div>
+      {% endif %}
+
+      <div class="job-foot">
+        <div class="chips">
+          {% if a.cv_file %}<a class="chip" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">📄 CV terkirim</a>{% endif %}
+          <span class="chip">🎓 {{ a.job.major_target or 'Umum' }}</span>
+        </div>
+        {% if a.status.value not in ['accepted','rejected','withdrawn'] %}
+        <form method="post" action="/pelamar/lamaran/{{ a.id }}/batal"
+              data-confirm="Batalkan lamaran untuk posisi {{ a.job.title }}?">
+          <button class="btn btn-outline btn-sm" type="submit">Batalkan lamaran</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% set base_query = 'status_filter=' ~ status_filter ~ '&' %}
+{% include "partials/pagination.html" %}
+{% else %}
+<div class="card">
+  {% with ico='📭', judul='Belum ada lamaran pada filter ini',
+          pesan='Ubah filter status atau kirim lamaran baru.', aksi_url='/lowongan', aksi_label='Cari Lowongan' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layout/base.html" %}
+{% block title %}Daftar Perusahaan{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:760px;margin:0 auto">
+  <div class="card-head">
+    <div>
+      <h1 style="font-size:1.4rem;margin:0">Daftar Perusahaan Mitra</h1>
+      <p class="small muted mb-0">Akun akan aktif memposting lowongan setelah diverifikasi pengelola BKK.</p>
+    </div>
+    <span class="badge info">🏢 DUDI</span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/daftar/perusahaan">
+      <fieldset>
+        <legend>Identitas perusahaan</legend>
+        <div class="field">
+          <label for="company_name">Nama perusahaan <span class="req">*</span></label>
+          <input id="company_name" type="text" name="company_name" value="{{ form.company_name | default('') }}" required>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="industry">Bidang usaha</label>
+            <input id="industry" type="text" name="industry" value="{{ form.industry | default('') }}" placeholder="Manufaktur, Retail, Perhotelan…">
+          </div>
+          <div class="field">
+            <label for="city">Kota / kabupaten</label>
+            <input id="city" type="text" name="city" value="{{ form.city | default('') }}">
+          </div>
+        </div>
+        <div class="field">
+          <label for="address">Alamat lengkap</label>
+          <textarea id="address" name="address" style="min-height:80px">{{ form.address | default('') }}</textarea>
+        </div>
+        <div class="field">
+          <label for="website">Situs web</label>
+          <input id="website" type="url" name="website" value="{{ form.website | default('') }}" placeholder="https://">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Penanggung jawab (PIC)</legend>
+        <div class="form-row">
+          <div class="field">
+            <label for="contact_person">Nama PIC <span class="req">*</span></label>
+            <input id="contact_person" type="text" name="contact_person" value="{{ form.contact_person | default('') }}" required>
+          </div>
+          <div class="field">
+            <label for="phone">Telepon / WhatsApp</label>
+            <input id="phone" type="tel" name="phone" value="{{ form.phone | default('') }}">
+          </div>
+        </div>
+        <div class="field">
+          <label for="email">Email perusahaan <span class="req">*</span></label>
+          <input id="email" type="email" name="email" value="{{ form.email | default('') }}" required>
+          <div class="help">Email ini menjadi nama pengguna untuk masuk ke portal.</div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Keamanan akun</legend>
+        <div class="form-row">
+          <div class="field">
+            <label for="password">Kata sandi <span class="req">*</span></label>
+            <input id="password" type="password" name="password" required>
+            <div class="help">Minimal 8 karakter, memuat huruf dan angka.</div>
+          </div>
+          <div class="field">
+            <label for="password_confirm">Ulangi kata sandi <span class="req">*</span></label>
+            <input id="password_confirm" type="password" name="password_confirm" required>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="agree" value="1" required>
+          <span>
+            Kami menyatakan data perusahaan benar, tidak memungut biaya apa pun dari pelamar,
+            dan bersedia mengikuti ketentuan kerja sama BKK {{ settings.school_name }}.
+          </span>
+        </label>
+      </fieldset>
+
+      <button class="btn btn-dark btn-block btn-lg" type="submit">Daftarkan Perusahaan</button>
+      <p class="center small muted mt-2">Sudah terdaftar? <a href="/masuk">Masuk</a></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

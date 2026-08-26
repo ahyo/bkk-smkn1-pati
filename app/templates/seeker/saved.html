@@ -1,0 +1,32 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Lowongan Tersimpan{% endblock %}
+{% block sidebar %}{% include "partials/nav_seeker.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Lowongan Tersimpan</h1><p>{{ saved | length }} lowongan Anda tandai untuk dilamar nanti.</p></div>
+</div>
+
+{% if saved %}
+<div class="grid">
+  {% for s in saved %}
+    {% set job = s.job %}
+    <div>
+      {% include "partials/job_card.html" %}
+      <form method="post" action="/pelamar/simpan/{{ job.id }}" class="mt-1">
+        <input type="hidden" name="kembali" value="/pelamar/tersimpan">
+        <button class="btn btn-ghost btn-sm" type="submit">🗑️ Hapus dari tersimpan</button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  {% with ico='🔖', judul='Belum ada lowongan tersimpan',
+          pesan='Klik "Simpan lowongan" pada halaman detail untuk menandainya.',
+          aksi_url='/lowongan', aksi_label='Jelajahi Lowongan' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

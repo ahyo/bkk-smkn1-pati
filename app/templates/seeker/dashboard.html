@@ -1,0 +1,79 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Dashboard Pencari Kerja{% endblock %}
+{% block sidebar %}{% include "partials/nav_seeker.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div>
+    <h1>Halo, {{ current_user.full_name.split()[0] }} 👋</h1>
+    <p>Ringkasan aktivitas pencarian kerja Anda.</p>
+  </div>
+  <a href="/lowongan" class="btn btn-primary">🔍 Cari Lowongan</a>
+</div>
+
+{% if seeker.completeness < 80 %}
+<div class="card mb-3" style="border-color:var(--warn-500)">
+  <div class="card-body">
+    <div class="flex between items-center wrap gap">
+      <div style="flex:1;min-width:240px">
+        <h3 class="mb-1">Lengkapi profil Anda ({{ seeker.completeness }}%)</h3>
+        <p class="small muted mb-2">Profil lengkap membuat perusahaan lebih mudah menilai kompetensi Anda.</p>
+        <div class="progress"><span style="width:{{ seeker.completeness }}%"></span></div>
+      </div>
+      <a href="/pelamar/profil" class="btn btn-accent">Lengkapi Sekarang</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid grid-4 mb-3">
+  <div class="stat"><div class="label">Total lamaran</div><div class="value">{{ stats.total }}</div></div>
+  <div class="stat warn"><div class="label">Dalam proses</div><div class="value">{{ stats.proses }}</div></div>
+  <div class="stat ok"><div class="label">Diterima</div><div class="value">{{ stats.diterima }}</div></div>
+  <div class="stat accent"><div class="label">Tersimpan</div><div class="value">{{ stats.tersimpan }}</div></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-head">
+    <h2>Lamaran terakhir</h2>
+    <a href="/pelamar/lamaran" class="btn btn-ghost btn-sm">Semua lamaran →</a>
+  </div>
+  {% if apps %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Posisi</th><th>Perusahaan</th><th>Dikirim</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in apps %}
+        <tr>
+          <td><a class="cell-main" href="/lowongan/{{ a.job.slug }}">{{ a.job.title }}</a>
+              <div class="cell-sub">📍 {{ a.job.location }}</div></td>
+          <td>{{ a.job.company.name }}</td>
+          <td class="nowrap">{{ a.created_at | tanggal }}</td>
+          <td><span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% with ico='📨', judul='Belum ada lamaran', pesan='Mulai lamar lowongan yang sesuai kompetensi keahlian Anda.',
+            aksi_url='/lowongan', aksi_label='Cari Lowongan' %}
+      {% include "partials/empty.html" %}
+    {% endwith %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>Rekomendasi untuk Anda</h2>
+    <span class="badge muted">{{ seeker.major or 'Semua jurusan' }}</span>
+  </div>
+  <div class="card-body">
+    {% if rekomendasi %}
+      <div class="grid">{% for job in rekomendasi %}{% include "partials/job_card.html" %}{% endfor %}</div>
+    {% else %}
+      <p class="muted center">Belum ada lowongan baru yang cocok. Coba periksa lagi nanti.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

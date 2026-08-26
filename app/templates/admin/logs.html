@@ -1,0 +1,37 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Log Aktivitas{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Log Aktivitas</h1><p>{{ meta.total }} kejadian tercatat untuk keperluan audit.</p></div>
+  <form method="get" class="flex gap-sm items-center">
+    <select name="aksi" data-autosubmit style="width:auto">
+      <option value="">Semua aksi</option>
+      {% for a in aksi_list %}<option value="{{ a }}" {{ 'selected' if aksi == a }}>{{ a }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Keterangan</th></tr></thead>
+      <tbody>
+        {% for l in logs %}
+        <tr>
+          <td class="nowrap cell-sub">{{ l.created_at | tanggal_jam }}</td>
+          <td class="cell-main">{{ l.actor or 'Sistem' }}</td>
+          <td><span class="badge muted">{{ l.action }}</span></td>
+          <td class="cell-sub">{{ l.detail or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="center muted">Belum ada log.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% set base_query = 'aksi=' ~ aksi|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% endblock %}

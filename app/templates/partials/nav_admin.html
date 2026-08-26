@@ -1,0 +1,15 @@
+{% set p = request.url.path %}
+<div class="sidebar-label">Panel Admin BKK</div>
+<nav>
+  <a href="/admin" class="{{ 'active' if p == '/admin' or p == '/admin/' }}"><span class="ico">🛡️</span> Ringkasan</a>
+  <a href="/admin/perusahaan" class="{{ 'active' if p.startswith('/admin/perusahaan') }}"><span class="ico">🏢</span> Perusahaan</a>
+  <a href="/admin/lowongan" class="{{ 'active' if p.startswith('/admin/lowongan') }}"><span class="ico">📋</span> Lowongan</a>
+  <a href="/admin/lamaran" class="{{ 'active' if p.startswith('/admin/lamaran') }}"><span class="ico">📨</span> Lamaran</a>
+  <a href="/admin/pengguna" class="{{ 'active' if p.startswith('/admin/pengguna') }}"><span class="ico">👥</span> Pengguna</a>
+</nav>
+<div class="sidebar-label">Pelaporan</div>
+<nav>
+  <a href="/admin/laporan" class="{{ 'active' if p.startswith('/admin/laporan') }}"><span class="ico">📊</span> Laporan &amp; Rekap</a>
+  <a href="/admin/pengumuman" class="{{ 'active' if p.startswith('/admin/pengumuman') }}"><span class="ico">📢</span> Pengumuman</a>
+  <a href="/admin/log" class="{{ 'active' if p.startswith('/admin/log') }}"><span class="ico">🧾</span> Log Aktivitas</a>
+</nav>

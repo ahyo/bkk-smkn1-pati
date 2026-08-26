@@ -1,0 +1,149 @@
+{% extends "layout/base.html" %}
+{% block title %}{{ job.title }} — {{ job.company.name }}{% endblock %}
+{% block description %}{{ job.title }} di {{ job.company.name }}, {{ job.location }}. Lowongan terverifikasi BKK {{ settings.school_name }}.{% endblock %}
+
+{% block content %}
+<div class="breadcrumb"><a href="/">Beranda</a> › <a href="/lowongan">Lowongan</a> › {{ job.title }}</div>
+
+{% if job.status != JobStatus.PUBLISHED %}
+  <div class="alert alert-warning"><span>⚠️</span><span>
+    Pratinjau: lowongan ini berstatus <b>{{ job.status | label_status_lowongan }}</b> dan belum tampil untuk publik.
+    {% if job.review_note %}<br>Catatan admin: {{ job.review_note }}{% endif %}
+  </span></div>
+{% endif %}
+
+<div class="layout-side-r">
+  <div>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="flex gap items-center wrap">
+          <div class="logo-box" style="width:64px;height:64px">
+            {% if job.company.logo %}<img src="{{ url_for('static', path=job.company.logo) }}" alt="">
+            {% else %}{{ job.company.initials }}{% endif %}
+          </div>
+          <div style="flex:1;min-width:200px">
+            <h1 style="font-size:1.6rem;margin-bottom:.2rem">{{ job.title }}</h1>
+            <div class="job-company">
+              <a href="/perusahaan-mitra/{{ job.company.slug }}">{{ job.company.name }}</a>
+              {% if job.company.is_verified %}<span class="badge ok badge-dot">Terverifikasi</span>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <div><small class="muted">Lokasi penempatan</small><div class="strong">📍 {{ job.location }}{% if job.is_remote %} · Remote{% endif %}</div></div>
+          <div><small class="muted">Tipe pekerjaan</small><div class="strong">💼 {{ job.employment_type | label_kerja }}</div></div>
+          <div><small class="muted">Estimasi gaji</small><div class="strong" style="color:var(--ok-700)">💰 {{ job.salary_display }}</div></div>
+          <div><small class="muted">Kuota</small><div class="strong">👥 {{ job.quota }} orang</div></div>
+          <div><small class="muted">Jurusan dibutuhkan</small><div class="strong">🎓 {{ job.major_target or 'Semua jurusan' }}</div></div>
+          <div><small class="muted">Batas lamaran</small><div class="strong">⏳ {{ job.deadline | tanggal if job.deadline else 'Tidak ditentukan' }}</div></div>
+          <div><small class="muted">Pendidikan minimal</small><div class="strong">📘 {{ job.min_education or 'SMK/SMA Sederajat' }}</div></div>
+          <div><small class="muted">Ketentuan lain</small><div class="strong">
+            {{ job.gender_pref or 'Semua' }}{% if job.max_age %} · maks. {{ job.max_age }} tahun{% endif %}
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-head"><h2>Deskripsi Pekerjaan</h2></div>
+      <div class="card-body prose">{{ job.description | nl2br | safe }}</div>
+    </div>
+
+    {% if job.requirements %}
+    <div class="card mb-3">
+      <div class="card-head"><h2>Kualifikasi &amp; Persyaratan</h2></div>
+      <div class="card-body prose">{{ job.requirements | nl2br | safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if job.benefits %}
+    <div class="card mb-3">
+      <div class="card-head"><h2>Fasilitas &amp; Benefit</h2></div>
+      <div class="card-body prose">{{ job.benefits | nl2br | safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if related %}
+    <h2 class="mt-4 mb-2">Lowongan serupa</h2>
+    <div class="grid">
+      {% for job in related %}{% include "partials/job_card.html" %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <aside>
+    <div class="card mb-2" style="position:sticky;top:82px">
+      <div class="card-body">
+        {% if not current_user %}
+          <p class="small muted">Masuk sebagai pencari kerja untuk mengirim lamaran.</p>
+          <a href="/masuk?next=/lowongan/{{ job.slug }}" class="btn btn-primary btn-block">Masuk untuk Melamar</a>
+          <a href="/daftar/pencari-kerja" class="btn btn-outline btn-block mt-1">Belum punya akun? Daftar</a>
+
+        {% elif current_user.role == Role.SEEKER %}
+          {% if sudah_melamar %}
+            <div class="alert alert-success mb-2"><span>✅</span><span>Anda sudah melamar pada lowongan ini.</span></div>
+            <a href="/pelamar/lamaran" class="btn btn-outline btn-block">Lihat Status Lamaran</a>
+          {% elif job.is_expired %}
+            <div class="alert alert-danger mb-2"><span>⛔</span><span>Batas akhir lamaran sudah lewat.</span></div>
+          {% else %}
+            <h3>Kirim Lamaran</h3>
+            <form method="post" action="/pelamar/lamar/{{ job.id }}" enctype="multipart/form-data">
+              <div class="field">
+                <label for="cover_letter">Surat lamaran singkat</label>
+                <textarea id="cover_letter" name="cover_letter" maxlength="1500"
+                          placeholder="Perkenalkan diri Anda dan jelaskan mengapa cocok untuk posisi ini…"></textarea>
+              </div>
+              <div class="field">
+                <label for="cv_file">Lampirkan CV {% if current_user.seeker and current_user.seeker.cv_file %}(opsional){% else %}<span class="req">*</span>{% endif %}</label>
+                <input id="cv_file" type="file" name="cv_file" accept=".pdf,.doc,.docx">
+                <div class="help file-hint">
+                  {% if current_user.seeker and current_user.seeker.cv_file %}
+                    CV tersimpan akan dipakai bila dikosongkan.
+                  {% else %}Format PDF/DOC/DOCX, maksimal {{ settings.max_upload_mb }} MB.{% endif %}
+                </div>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">📨 Kirim Lamaran</button>
+            </form>
+          {% endif %}
+
+          <form method="post" action="/pelamar/simpan/{{ job.id }}" class="mt-1">
+            <input type="hidden" name="kembali" value="/lowongan/{{ job.slug }}">
+            <button class="btn btn-ghost btn-block" type="submit">
+              {{ '🔖 Hapus dari tersimpan' if tersimpan else '🔖 Simpan lowongan' }}
+            </button>
+          </form>
+
+        {% elif current_user.role == Role.COMPANY %}
+          <p class="small muted">Anda masuk sebagai perusahaan.</p>
+          <a href="/perusahaan/pelamar?job_id={{ job.id }}" class="btn btn-primary btn-block">Lihat Pelamar ({{ jumlah_pelamar }})</a>
+          <a href="/perusahaan/lowongan/{{ job.id }}/ubah" class="btn btn-outline btn-block mt-1">Ubah Lowongan</a>
+        {% else %}
+          <p class="small muted">Mode admin — pemantauan lowongan.</p>
+          <a href="/admin/lowongan?q={{ job.title | urlencode }}" class="btn btn-primary btn-block">Kelola di Panel Admin</a>
+        {% endif %}
+
+        <div class="divider"></div>
+        <div class="small muted">
+          <div class="flex between"><span>Pelamar saat ini</span><b>{{ jumlah_pelamar }}</b></div>
+          <div class="flex between"><span>Dilihat</span><b>{{ job.views or 0 }}</b></div>
+          <div class="flex between"><span>Diposting</span><b>{{ job.published_at | waktu_lalu if job.published_at else job.created_at | waktu_lalu }}</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h3>Tentang perusahaan</h3>
+        <p class="small muted">{{ (job.company.description or 'Belum ada deskripsi perusahaan.')[:260] }}</p>
+        <div class="small">
+          {% if job.company.industry %}<div>🏭 {{ job.company.industry }}</div>{% endif %}
+          {% if job.company.city %}<div>📍 {{ job.company.city }}</div>{% endif %}
+          {% if job.company.website %}<div>🌐 <a href="{{ job.company.website }}" target="_blank" rel="noopener">{{ job.company.website }}</a></div>{% endif %}
+        </div>
+        <a href="/perusahaan-mitra/{{ job.company.slug }}" class="btn btn-outline btn-sm btn-block mt-2">Profil Perusahaan</a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

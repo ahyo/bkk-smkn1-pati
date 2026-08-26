@@ -1,0 +1,148 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Panel Pemantauan BKK</h1><p>Ringkasan seluruh aktivitas portal bursa kerja sekolah.</p></div>
+  <div class="btn-group">
+    <a href="/admin/laporan" class="btn btn-outline">📊 Laporan</a>
+    <a href="/admin/laporan/ekspor?jenis=lamaran" class="btn btn-primary">⬇️ Ekspor CSV</a>
+  </div>
+</div>
+
+{% if stats.perusahaan_pending or stats.lowongan_pending %}
+<div class="alert alert-warning mb-3">
+  <span>⏳</span>
+  <span>
+    Ada <b>{{ stats.perusahaan_pending }}</b> perusahaan dan <b>{{ stats.lowongan_pending }}</b> lowongan
+    menunggu tindakan Anda.
+    <a href="/admin/perusahaan?status_filter=pending">Verifikasi perusahaan</a> ·
+    <a href="/admin/lowongan?status_filter=pending">Tinjau lowongan</a>
+  </span>
+</div>
+{% endif %}
+
+<div class="grid grid-4 mb-3">
+  <div class="stat"><div class="label">Total pengguna</div><div class="value">{{ stats.pengguna }}</div>
+    <div class="hint">{{ stats.pelamar }} pencari kerja</div></div>
+  <div class="stat ok"><div class="label">Perusahaan mitra</div><div class="value">{{ stats.perusahaan_verified }}</div>
+    <div class="hint">dari {{ stats.perusahaan }} terdaftar</div></div>
+  <div class="stat accent"><div class="label">Lowongan tayang</div><div class="value">{{ stats.lowongan_tayang }}</div>
+    <div class="hint">dari {{ stats.lowongan }} total</div></div>
+  <div class="stat warn"><div class="label">Tingkat penerimaan</div><div class="value">{{ stats.serapan }}%</div>
+    <div class="hint">{{ stats.diterima }} dari {{ stats.lamaran }} lamaran</div></div>
+</div>
+
+<div class="grid grid-2 mb-3">
+  <div class="card">
+    <div class="card-head">
+      <h2>Antrean verifikasi perusahaan</h2>
+      <a href="/admin/perusahaan?status_filter=pending" class="btn btn-ghost btn-sm">Semua →</a>
+    </div>
+    <div class="card-body">
+      {% if antrian_perusahaan %}
+        {% for c in antrian_perusahaan %}
+        <div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+          <div style="min-width:0">
+            <div class="cell-main truncate">{{ c.name }}</div>
+            <div class="cell-sub">{{ c.industry or 'Bidang belum diisi' }} · {{ c.city or '-' }} · {{ c.created_at | waktu_lalu }}</div>
+          </div>
+          <div class="btn-group">
+            <form method="post" action="/admin/perusahaan/{{ c.id }}/status">
+              <input type="hidden" name="new_status" value="verified">
+              <button class="btn btn-ok btn-sm" type="submit">Verifikasi</button>
+            </form>
+            <a class="btn btn-outline btn-sm" href="/admin/perusahaan?q={{ c.name | urlencode }}">Detail</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}<p class="muted center mb-0">Tidak ada antrean. 🎉</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Lowongan menunggu persetujuan</h2>
+      <a href="/admin/lowongan?status_filter=pending" class="btn btn-ghost btn-sm">Semua →</a>
+    </div>
+    <div class="card-body">
+      {% if antrian_lowongan %}
+        {% for j in antrian_lowongan %}
+        <div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">
+          <div style="min-width:0">
+            <div class="cell-main truncate"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
+            <div class="cell-sub">{{ j.company.name }} · 📍 {{ j.location }} · {{ j.created_at | waktu_lalu }}</div>
+          </div>
+          <div class="btn-group">
+            <form method="post" action="/admin/lowongan/{{ j.id }}/status">
+              <input type="hidden" name="new_status" value="published">
+              <button class="btn btn-ok btn-sm" type="submit">Setujui</button>
+            </form>
+            <a class="btn btn-outline btn-sm" href="/lowongan/{{ j.slug }}">Tinjau</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}<p class="muted center mb-0">Tidak ada antrean. 🎉</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-2 mb-3">
+  <div class="card">
+    <div class="card-head"><h2>Tren lamaran masuk</h2><span class="badge muted">6 bulan terakhir</span></div>
+    <div class="card-body">
+      {% if tren %}
+      <div class="bars">
+        {% for t in tren %}
+        <div class="bar">
+          <b>{{ t.value }}</b>
+          <i style="height:{{ (t.value / tren_max * 100) | round(1) }}%"></i>
+          <small>{{ t.label }}</small>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted center mb-0">Belum ada data lamaran.</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Lowongan per kompetensi keahlian</h2></div>
+    <div class="card-body">
+      {% if per_jurusan %}
+        {% set maxv = per_jurusan[0][1] or 1 %}
+        {% for nama, jumlah in per_jurusan %}
+        <div class="hbar">
+          <div>
+            <div class="flex between"><span class="truncate">{{ nama }}</span><b>{{ jumlah }}</b></div>
+            <div class="track"><i style="width:{{ (jumlah / maxv * 100) | round(1) }}%"></i></div>
+          </div>
+          <span class="tiny muted right">{{ jumlah }} lowongan</span>
+        </div>
+        {% endfor %}
+      {% else %}<p class="muted center mb-0">Belum ada lowongan tayang.</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Aktivitas terakhir</h2><a href="/admin/log" class="btn btn-ghost btn-sm">Semua log →</a></div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Keterangan</th></tr></thead>
+      <tbody>
+        {% for l in logs %}
+        <tr>
+          <td class="nowrap cell-sub">{{ l.created_at | waktu_lalu }}</td>
+          <td>{{ l.actor or '-' }}</td>
+          <td><span class="badge muted">{{ l.action }}</span></td>
+          <td class="cell-sub">{{ l.detail or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="center muted">Belum ada aktivitas tercatat.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "layout/base.html" %}
+{% block title %}Kesalahan {{ code }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:620px;margin:3rem auto">
+  <div class="card-body center">
+    <div style="font-size:3.4rem;line-height:1">{{ {403:'🔒',404:'🔍',422:'📝',500:'⚠️'}.get(code,'⚠️') }}</div>
+    <h1 style="font-size:2.6rem;margin:.3rem 0">{{ code }}</h1>
+    <p class="muted">{{ detail }}</p>
+    <div class="btn-group mt-2" style="justify-content:center">
+      <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+      <a href="/lowongan" class="btn btn-outline">Lihat Lowongan</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

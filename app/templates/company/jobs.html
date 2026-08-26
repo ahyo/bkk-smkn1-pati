@@ -1,0 +1,85 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Lowongan Saya{% endblock %}
+{% block sidebar %}{% include "partials/nav_company.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Lowongan Saya</h1><p>{{ meta.total }} lowongan terdaftar.</p></div>
+  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a>
+</div>
+
+<div class="tabs">
+  <a href="/perusahaan/lowongan" class="{{ 'active' if not status_filter }}">Semua</a>
+  {% for s, label in JOB_STATUS_LABEL.items() %}
+    <a href="?status_filter={{ s.value }}" class="{{ 'active' if status_filter == s.value }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+    <div>
+      <label class="label" for="q">Cari judul lowongan</label>
+      <input id="q" type="search" name="q" value="{{ q }}" placeholder="mis. Operator Produksi">
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" type="submit">Cari</button>
+      <a href="/perusahaan/lowongan" class="btn btn-ghost">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if jobs %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Lowongan</th><th>Tipe</th><th>Kuota</th><th>Pelamar</th><th>Batas</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr>
+          <td>
+            <div class="cell-main"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
+            <div class="cell-sub">📍 {{ j.location }} · 🎓 {{ j.major_target or 'Umum' }} · 👁️ {{ j.views or 0 }}</div>
+            {% if j.review_note %}<div class="cell-sub" style="color:var(--danger-700)">💬 {{ j.review_note }}</div>{% endif %}
+          </td>
+          <td class="cell-sub nowrap">{{ j.employment_type | label_kerja }}</td>
+          <td>{{ j.quota }}</td>
+          <td><a class="badge info" href="/perusahaan/pelamar?job_id={{ j.id }}">{{ counts.get(j.id, 0) }}</a></td>
+          <td class="cell-sub nowrap">
+            {{ j.deadline | tanggal if j.deadline else '—' }}
+            {% if j.is_expired %}<div class="tiny" style="color:var(--danger-700)">kedaluwarsa</div>{% endif %}
+          </td>
+          <td><span class="badge {{ j.status | badge_lowongan }}">{{ j.status | label_status_lowongan }}</span></td>
+          <td>
+            <div class="cell-actions">
+              <a class="btn btn-outline btn-sm" href="/perusahaan/lowongan/{{ j.id }}/ubah">Ubah</a>
+              {% if j.status == JobStatus.PUBLISHED %}
+                <form method="post" action="/perusahaan/lowongan/{{ j.id }}/tutup" data-confirm="Tutup lowongan ini?">
+                  <button class="btn btn-ghost btn-sm" type="submit">Tutup</button>
+                </form>
+              {% elif counts.get(j.id, 0) == 0 %}
+                <form method="post" action="/perusahaan/lowongan/{{ j.id }}/hapus" data-confirm="Hapus lowongan ini secara permanen?">
+                  <button class="btn btn-ghost btn-sm" type="submit">Hapus</button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% set base_query = 'status_filter=' ~ status_filter ~ '&q=' ~ q|urlencode ~ '&' %}
+{% include "partials/pagination.html" %}
+{% else %}
+<div class="card">
+  {% with ico='📋', judul='Belum ada lowongan', pesan='Buat lowongan pertama Anda dan jangkau lulusan sekolah.',
+          aksi_url='/perusahaan/lowongan/baru', aksi_label='Pasang Lowongan' %}
+    {% include "partials/empty.html" %}
+  {% endwith %}
+</div>
+{% endif %}
+{% endblock %}

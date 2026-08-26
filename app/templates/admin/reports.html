@@ -1,0 +1,87 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Laporan & Rekap{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div><h1>Laporan &amp; Rekap Penyaluran</h1><p>Bahan pelaporan BKK ke sekolah dan dinas terkait.</p></div>
+  <div class="btn-group">
+    <a href="/admin/laporan/ekspor?jenis=lamaran" class="btn btn-outline">⬇️ Lamaran</a>
+    <a href="/admin/laporan/ekspor?jenis=lowongan" class="btn btn-outline">⬇️ Lowongan</a>
+    <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">⬇️ Perusahaan</a>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak</button>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-head">
+    <h2>Lamaran per bulan — tahun {{ tahun }}</h2>
+    <form method="get" class="flex gap-sm items-center">
+      <select name="tahun" data-autosubmit style="width:auto">
+        {% for t in tahun_tersedia %}<option value="{{ t }}" {{ 'selected' if t == tahun }}>{{ t }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+  <div class="card-body">
+    <div class="bars">
+      {% set nama_bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'] %}
+      {% for i in range(1, 13) %}
+        {% set n = bulan_map.get(i, 0) %}
+        <div class="bar">
+          <b>{{ n }}</b>
+          <i style="height:{{ (n / bulan_max * 100) | round(1) }}%"></i>
+          <small>{{ nama_bulan[i-1] }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head"><h2>Rekap per kompetensi keahlian</h2></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Kompetensi Keahlian</th><th class="right">Pelamar</th><th class="right">Lamaran</th><th class="right">Diterima</th><th class="right">%</th></tr></thead>
+        <tbody>
+          {% for major, pelamar, lamaran, diterima in per_jurusan %}
+          <tr>
+            <td class="cell-main">{{ major or 'Belum diisi' }}</td>
+            <td class="right">{{ pelamar }}</td>
+            <td class="right">{{ lamaran }}</td>
+            <td class="right">{{ diterima or 0 }}</td>
+            <td class="right">
+              <span class="badge {{ 'ok' if lamaran and (diterima or 0) / lamaran > 0.2 else 'muted' }}">
+                {{ ((diterima or 0) / lamaran * 100) | round(1) if lamaran else 0 }}%
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="center muted">Belum ada data.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Perusahaan paling aktif</h2></div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Perusahaan</th><th class="right">Lowongan</th><th class="right">Lamaran masuk</th></tr></thead>
+        <tbody>
+          {% for nama, lowongan, lamaran in per_perusahaan %}
+          <tr><td class="cell-main">{{ nama }}</td><td class="right">{{ lowongan }}</td><td class="right">{{ lamaran }}</td></tr>
+          {% else %}
+          <tr><td colspan="3" class="center muted">Belum ada data.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<p class="tiny muted mt-3">
+  Dicetak dari {{ settings.app_name }} — {{ settings.school_name }}. Data bersifat dinamis dan mengikuti kondisi terkini portal.
+</p>
+{% endblock %}
