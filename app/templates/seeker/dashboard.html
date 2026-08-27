@@ -66,7 +66,7 @@
 <div class="card">
   <div class="card-head">
     <h2>Rekomendasi untuk Anda</h2>
-    <span class="badge muted">{{ seeker.major or 'Semua jurusan' }}</span>
+    <span class="badge muted">{{ seeker.major.name if seeker.major else 'Jurusan belum diisi' }}</span>
   </div>
   <div class="card-body">
     {% if rekomendasi %}

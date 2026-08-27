@@ -78,6 +78,15 @@
   function company(id) { return DB.companies.find(function (c) { return c.id === id; }); }
   function myCompany() { var u = user(); return u && u.companyId ? company(u.companyId) : null; }
   function seeker(id) { return DB.seekers.find(function (s) { return s.id === id; }); }
+  function major(id) { return DB.majors.find(function (m) { return m.id === id; }); }
+  function majorName(id, kosong) {
+    var m = major(id);
+    return m ? m.name : (kosong || "Semua jurusan");
+  }
+  function activeMajors() {
+    return DB.majors.filter(function (m) { return m.active; })
+      .sort(function (a, b) { return a.sort - b.sort; });
+  }
   function mySeeker() { var u = user(); return u && u.seekerId ? seeker(u.seekerId) : null; }
   function seekerUser(sid) { return DB.users.find(function (u) { return u.seekerId === sid; }); }
   function job(id) { return DB.jobs.find(function (j) { return j.id === id; }); }
@@ -90,7 +99,7 @@
     });
   }
   function completeness(s) {
-    var f = [s.phone, s.gender, s.birth, s.city, s.major, s.grad, s.headline, s.summary,
+    var f = [s.phone, s.gender, s.birth, s.city, s.majorId, s.grad, s.headline, s.summary,
              s.skills, s.education, s.cv, s.photo, s.experience];
     return Math.round(f.filter(Boolean).length / f.length * 100);
   }
@@ -128,7 +137,7 @@
             : "") + '</div>' +
         '<div class="job-meta">' +
           '<span>' + ICON('pin') + ' ' + esc(j.location) + (j.remote ? " · Remote" : "") + '</span>' +
-          (j.major ? '<span>' + ICON('cap') + ' ' + esc(j.major) + '</span>' : "") +
+          (j.majorId ? '<span>' + ICON('cap') + ' ' + esc(majorName(j.majorId)) + '</span>' : "") +
           '<span>' + ICON('users') + ' ' + j.quota + ' posisi</span>' +
         '</div>' +
         '<div class="job-salary">' + esc(gaji(j)) + '</div>' +
@@ -177,7 +186,7 @@
       groups = [["Panel Admin BKK", [
         ["#/admin", "shield", "Ringkasan"], ["#/admin/perusahaan", "building", "Perusahaan"],
         ["#/admin/lowongan", "clipboard", "Lowongan"], ["#/admin/lamaran", "inbox", "Lamaran"],
-        ["#/admin/pengguna", "users", "Pengguna"]]],
+        ["#/admin/pengguna", "users", "Pengguna"], ["#/admin/jurusan", "cap", "Jurusan"]]],
         ["Pelaporan", [["#/admin/laporan", "chart", "Laporan & Rekap"],
         ["#/admin/pengumuman", "megaphone", "Pengumuman"], ["#/admin/log", "history", "Log Aktivitas"]]]];
     }
@@ -214,7 +223,10 @@
       penempatan: DB.applications.filter(function (a) { return a.status === "accepted"; }).length
     };
     var perJurusan = {};
-    publicJobs().forEach(function (j) { perJurusan[j.major || "Umum"] = (perJurusan[j.major || "Umum"] || 0) + 1; });
+    publicJobs().forEach(function (j) {
+      var nm = majorName(j.majorId);
+      perJurusan[nm] = (perJurusan[nm] || 0) + 1;
+    });
 
     return '<section class="hero"><div class="container">' +
       '<span class="eyebrow">' + ICON('cap') + ' Portal Resmi BKK ' + SEKOLAH + '</span>' +
@@ -225,7 +237,9 @@
         '<input type="search" name="q" placeholder="Posisi, kata kunci, atau perusahaan">' +
         '<input type="text" name="lokasi" placeholder="Kota / kabupaten">' +
         '<select name="jurusan"><option value="">Semua Kompetensi Keahlian</option>' +
-        DB.majors.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join("") + '</select>' +
+        activeMajors().map(function (m) {
+          return '<option value="' + m.slug + '">' + esc(m.name) + '</option>';
+        }).join("") + '</select>' +
         '<button class="btn btn-accent" type="submit">' + ICON('search') + ' Cari Lowongan</button>' +
       '</form>' +
       '<div class="hero-stats">' +
@@ -293,7 +307,7 @@
         if (t.indexOf(f.q.toLowerCase()) === -1) return false;
       }
       if (f.lokasi && j.location.toLowerCase().indexOf(f.lokasi.toLowerCase()) === -1) return false;
-      if (f.jurusan && j.major !== f.jurusan) return false;
+      if (f.jurusan) { var mj = major(j.majorId); if (!mj || mj.slug !== f.jurusan) return false; }
       if (f.tipe && j.type !== f.tipe) return false;
       return true;
     });
@@ -308,7 +322,10 @@
       '<div><label class="label">Kata kunci</label><input type="search" name="q" value="' + esc(f.q) + '" placeholder="Posisi / perusahaan"></div>' +
       '<div><label class="label">Lokasi</label><input type="text" name="lokasi" value="' + esc(f.lokasi) + '" placeholder="Semua kota"></div>' +
       '<div><label class="label">Kompetensi keahlian</label><select name="jurusan"><option value="">Semua jurusan</option>' +
-      DB.majors.map(function (m) { return '<option ' + (f.jurusan === m ? "selected" : "") + '>' + esc(m) + '</option>'; }).join("") +
+      activeMajors().map(function (m) {
+        return '<option value="' + m.slug + '"' + (f.jurusan === m.slug ? " selected" : "") + '>' +
+          esc(m.name) + '</option>';
+      }).join("") +
       '</select></div>' +
       '<div><label class="label">Tipe kerja</label><select name="tipe"><option value="">Semua tipe</option>' +
       Object.keys(DB.employment).map(function (k) {
@@ -333,7 +350,7 @@
     var sudah = s && DB.applications.some(function (a) { return a.jobId === j.id && a.seekerId === s.id; });
     var tersimpan = s && DB.saved.some(function (x) { return x.jobId === j.id && x.seekerId === s.id; });
     var related = publicJobs().filter(function (x) {
-      return x.id !== j.id && (x.major === j.major || x.companyId === j.companyId);
+      return x.id !== j.id && (x.majorId === j.majorId || x.companyId === j.companyId);
     }).slice(0, 4);
 
     var aksi;
@@ -381,7 +398,7 @@
         baris("Tipe pekerjaan", ICON('briefcase') + " " + esc(DB.employment[j.type])) +
         baris("Estimasi gaji", '<span style="color:var(--ok-700)">' + ICON('money') + ' ' + esc(gaji(j)) + '</span>') +
         baris("Kuota", ICON('users') + " " + j.quota + " orang") +
-        baris("Jurusan dibutuhkan", ICON('cap') + " " + esc(j.major || "Semua jurusan")) +
+        baris("Jurusan dibutuhkan", ICON('cap') + " " + esc(majorName(j.majorId))) +
         baris("Batas lamaran", ICON('clock') + " " + (j.deadline ? tgl(j.deadline) : "Tidak ditentukan")) +
         baris("Pendidikan minimal", ICON('book') + " SMK/SMA Sederajat") +
         baris("Ketentuan lain", esc(j.gender || "Semua") + (j.maxAge ? " · maks. " + j.maxAge + " tahun" : "")) +
@@ -520,7 +537,7 @@
     var diterima = apps.filter(function (a) { return a.status === "accepted"; }).length;
     var tersimpan = DB.saved.filter(function (x) { return x.seekerId === s.id; }).length;
     var sudahIds = apps.map(function (a) { return a.jobId; });
-    var rec = publicJobs().filter(function (j) { return sudahIds.indexOf(j.id) === -1 && j.major === s.major; });
+    var rec = publicJobs().filter(function (j) { return sudahIds.indexOf(j.id) === -1 && j.majorId === s.majorId; });
     if (rec.length < 4) rec = rec.concat(publicJobs().filter(function (j) {
       return sudahIds.indexOf(j.id) === -1 && rec.indexOf(j) === -1;
     })).slice(0, 4);
@@ -552,7 +569,7 @@
         : empty("inbox", "Belum ada lamaran", "Mulai lamar lowongan yang sesuai kompetensi Anda.", "#/lowongan", "Cari Lowongan")) +
       '</div>' +
       '<div class="card"><div class="card-head"><h2>Rekomendasi untuk Anda</h2>' +
-      '<span class="badge muted">' + esc(s.major || "Semua jurusan") + '</span></div>' +
+      '<span class="badge muted">' + esc(majorName(s.majorId, "Jurusan belum diisi")) + '</span></div>' +
       '<div class="card-body">' + (rec.length ? '<div class="grid">' + rec.slice(0, 4).map(jobCard).join("") + '</div>'
         : '<p class="muted center">Belum ada lowongan baru yang cocok.</p>') + '</div></div>';
   }
@@ -581,7 +598,7 @@
             tglJam(a.interview) + '</b></span></div>' : "") +
           (a.note ? '<div class="alert alert-info mt-2 mb-0"><span>' + ICON('message') + '</span><span>Catatan perusahaan: ' + esc(a.note) + '</span></div>' : "") +
           '<div class="job-foot"><div class="chips"><span class="chip">' + ICON('file') + ' CV terkirim</span>' +
-          '<span class="chip">' + ICON('cap') + ' ' + esc(j.major || "Umum") + '</span></div>' +
+          '<span class="chip">' + ICON('cap') + ' ' + esc(majorName(j.majorId)) + '</span></div>' +
           (["accepted", "rejected", "withdrawn"].indexOf(a.status) === -1 ?
             '<button class="btn btn-outline btn-sm" data-action="batal-lamaran" data-id="' + a.id + '">Batalkan lamaran</button>' : "") +
           '</div></div></div>';
@@ -631,8 +648,9 @@
       '</div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Pendidikan &amp; Kompetensi</h2></div><div class="card-body">' +
       '<div class="form-row"><div class="field"><label>Kompetensi keahlian</label><select name="major">' +
-      '<option value="">— pilih —</option>' + DB.majors.map(function (m) {
-        return '<option ' + (s.major === m ? "selected" : "") + '>' + esc(m) + '</option>';
+      '<option value="">— pilih —</option>' + activeMajors().map(function (m) {
+        return '<option value="' + m.id + '"' + (s.majorId === m.id ? " selected" : "") + '>' +
+          esc(m.code) + ' — ' + esc(m.name) + '</option>';
       }).join("") + '</select></div>' + fld("Tahun lulus", "grad", s.grad, "number") + '</div>' +
       fld("Headline profil", "headline", s.headline) +
       '<div class="field"><label>Ringkasan diri</label><textarea name="summary" maxlength="1200">' + esc(s.summary || "") + '</textarea></div>' +
@@ -685,7 +703,7 @@
           var s = seeker(a.seekerId), su = seekerUser(s.id), j = job(a.jobId);
           return '<tr><td><div class="flex gap-sm items-center"><span class="avatar">' + esc(inisial(su.name)) + '</span>' +
             '<div><div class="cell-main">' + esc(su.name) + '</div><div class="cell-sub">' + esc(s.headline || su.email) + '</div></div></div></td>' +
-            '<td>' + esc(j.title) + '</td><td class="cell-sub">' + esc(s.major) + '</td>' +
+            '<td>' + esc(j.title) + '</td><td class="cell-sub">' + esc(majorName(s.majorId, "-")) + '</td>' +
             '<td class="nowrap cell-sub">' + tgl(a.created) + '</td>' +
             '<td><span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span></td>' +
             '<td class="right"><a class="btn btn-outline btn-sm" href="#/perusahaan/pelamar/' + a.id + '">Tinjau</a></td></tr>';
@@ -722,7 +740,7 @@
         '<th>Lowongan</th><th>Tipe</th><th>Kuota</th><th>Pelamar</th><th>Batas</th><th>Status</th><th></th></tr></thead><tbody>' +
         jobs.map(function (j) {
           return '<tr><td><div class="cell-main"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></div>' +
-            '<div class="cell-sub">' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(j.major || "Umum") + ' · ' + ICON('eye') + ' ' + (j.views || 0) + '</div>' +
+            '<div class="cell-sub">' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(majorName(j.majorId)) + ' · ' + ICON('eye') + ' ' + (j.views || 0) + '</div>' +
             (j.reviewNote ? '<div class="cell-sub" style="color:var(--danger-700)">' + ICON('message') + ' ' + esc(j.reviewNote) + '</div>' : "") + '</td>' +
             '<td class="cell-sub nowrap">' + esc(DB.employment[j.type]) + '</td><td>' + j.quota + '</td>' +
             '<td><span class="badge info">' + appsOfJob(j.id).length + '</span></td>' +
@@ -796,7 +814,7 @@
       if (fs && a.status !== fs) return false;
       if (q) {
         var s = seeker(a.seekerId), su = seekerUser(s.id);
-        if ((su.name + s.major + s.skills).toLowerCase().indexOf(q.toLowerCase()) === -1) return false;
+        if ((su.name + majorName(s.majorId, "") + s.skills).toLowerCase().indexOf(q.toLowerCase()) === -1) return false;
       }
       return true;
     });
@@ -820,9 +838,9 @@
         return '<div class="card"><div class="card-body">' +
           '<div class="flex gap items-center mb-2"><span class="avatar avatar-lg">' + esc(inisial(su.name)) + '</span>' +
           '<div style="min-width:0;flex:1"><h3 class="truncate" style="margin:0">' + esc(su.name) + '</h3>' +
-          '<div class="cell-sub truncate">' + esc(s.headline || s.major) + '</div>' +
+          '<div class="cell-sub truncate">' + esc(s.headline || majorName(s.majorId, "Pencari kerja")) + '</div>' +
           '<span class="badge ' + BADGE_APP[a.status] + ' mt-1">' + esc(DB.appStatus[a.status]) + '</span></div></div>' +
-          '<div class="job-meta"><span>' + ICON('clipboard') + ' ' + esc(j.title) + '</span><span>' + ICON('cap') + ' ' + esc(s.major) + '</span>' +
+          '<div class="job-meta"><span>' + ICON('clipboard') + ' ' + esc(j.title) + '</span><span>' + ICON('cap') + ' ' + esc(majorName(s.majorId, "-")) + '</span>' +
           '<span>' + ICON('calendar') + ' Lulus ' + s.grad + '</span><span>' + ICON('pin') + ' ' + esc(s.city) + '</span></div>' +
           '<div class="chips mt-1">' + skills.slice(0, 4).map(function (x) { return '<span class="chip">' + esc(x) + '</span>'; }).join("") +
           (skills.length > 4 ? '<span class="chip">+' + (skills.length - 4) + '</span>' : "") + '</div>' +
@@ -850,7 +868,7 @@
       '<div style="flex:1;min-width:220px"><h1 style="margin-bottom:.15rem">' + esc(su.name) + '</h1>' +
       '<p class="muted mb-1">' + esc(s.headline) + '</p><div class="chips">' +
       '<span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span>' +
-      '<span class="chip">' + ICON('cap') + ' ' + esc(s.major) + '</span><span class="chip">' + ICON('calendar') + ' Lulus ' + s.grad + '</span>' +
+      '<span class="chip">' + ICON('cap') + ' ' + esc(majorName(s.majorId, "-")) + '</span><span class="chip">' + ICON('calendar') + ' Lulus ' + s.grad + '</span>' +
       (s.openToWork ? '<span class="badge ok">Terbuka untuk kerja</span>' : "") + '</div></div>' +
       (s.cv ? '<span class="btn btn-outline">' + ICON('file') + ' CV tersedia</span>' : '<span class="badge muted">Belum unggah CV</span>') + '</div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Melamar untuk</h2></div><div class="card-body">' +
@@ -937,7 +955,10 @@
 
     var perJurusan = {};
     DB.jobs.filter(function (j) { return j.status === "published"; })
-      .forEach(function (j) { perJurusan[j.major || "Umum"] = (perJurusan[j.major || "Umum"] || 0) + 1; });
+      .forEach(function (j) {
+        var nm = majorName(j.majorId);
+        perJurusan[nm] = (perJurusan[nm] || 0) + 1;
+      });
     var jurKeys = Object.keys(perJurusan).sort(function (a, b) { return perJurusan[b] - perJurusan[a]; });
     var maxJ = perJurusan[jurKeys[0]] || 1;
 
@@ -1044,7 +1065,7 @@
         return '<div class="card"><div class="card-body">' +
           '<h3 style="margin-bottom:.15rem"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a> ' +
           '<span class="badge ' + BADGE_JOB[j.status] + '">' + esc(DB.jobStatus[j.status]) + '</span></h3>' +
-          '<div class="cell-sub">' + ICON('building') + ' ' + esc(c.name) + ' · ' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(j.major || "Umum") + '</div>' +
+          '<div class="cell-sub">' + ICON('building') + ' ' + esc(c.name) + ' · ' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(majorName(j.majorId)) + '</div>' +
           '<div class="cell-sub">' + ICON('money') + ' ' + esc(gaji(j)) + ' · ' + ICON('users') + ' ' + j.quota + ' orang · ' + ICON('inbox') + ' ' + appsOfJob(j.id).length +
           ' pelamar · ' + ICON('eye') + ' ' + (j.views || 0) + ' · ' + ICON('clock') + ' ' + (j.deadline ? tgl(j.deadline) : "tanpa batas") + '</div>' +
           (j.reviewNote ? '<div class="cell-sub" style="color:var(--warn-700)">' + ICON('message') + ' ' + esc(j.reviewNote) + '</div>' : "") +
@@ -1075,7 +1096,7 @@
         var s = seeker(a.seekerId), su = seekerUser(s.id), j = job(a.jobId);
         return '<tr><td><div class="cell-main">' + esc(su.name) + '</div>' +
           '<div class="cell-sub">' + esc(su.email) + ' · NIS ' + esc(s.nis) + '</div></td>' +
-          '<td class="cell-sub">' + esc(s.major) + '<div class="tiny">lulus ' + s.grad + '</div></td>' +
+          '<td class="cell-sub">' + esc(majorName(s.majorId, "-")) + '<div class="tiny">lulus ' + s.grad + '</div></td>' +
           '<td><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></td>' +
           '<td class="cell-sub">' + esc(company(j.companyId).name) + '</td>' +
           '<td class="nowrap cell-sub">' + tgl(a.created) + '</td>' +
@@ -1108,7 +1129,7 @@
             esc(DB.companyStatus[c.status]) + '</span>';
         } else if (u.role === "seeker") {
           var s = seeker(u.seekerId);
-          detail = esc(s.major) + " · lulus " + s.grad + "<br>profil " + completeness(s) + "% lengkap";
+          detail = esc(majorName(s.majorId, "-")) + " · lulus " + s.grad + "<br>profil " + completeness(s) + "% lengkap";
         }
         var nama = u.role === "company" ? company(u.companyId).name : u.name;
         return '<tr><td><div class="cell-main">' + esc(nama) + '</div><div class="cell-sub">' + esc(u.email) + '</div></td>' +
@@ -1121,18 +1142,68 @@
       }).join("") + '</tbody></table></div></div>';
   }
 
-  function pageAdminLaporan() {
-    var perJurusan = {};
+  function pageAdminJurusan() {
+    var list = DB.majors.slice().sort(function (a, b) { return a.sort - b.sort; });
+    return '<div class="page-head"><div><h1>Kompetensi Keahlian</h1>' +
+      '<p>Data induk jurusan. Dipakai pada profil pencari kerja, target lowongan, ' +
+      'dan laporan serapan kerja.</p></div>' +
+      '<a href="#/admin/laporan" class="btn btn-outline">' + ICON('chart') + ' Laporan Serapan</a></div>' +
+      '<div class="card mb-3"><div class="card-head"><h2>Daftar jurusan</h2>' +
+      '<span class="muted small">' + list.length + ' jurusan</span></div>' +
+      '<div class="table-wrap"><table class="data"><thead><tr><th>Kode</th>' +
+      '<th style="min-width:200px">Nama</th><th>Dipakai</th><th>Status</th><th></th></tr></thead><tbody>' +
+      list.map(function (m) {
+        var alumni = DB.seekers.filter(function (s) { return s.majorId === m.id; }).length;
+        var lowongan = DB.jobs.filter(function (j) { return j.majorId === m.id; }).length;
+        return '<tr><td><span class="badge muted">' + esc(m.code) + '</span></td>' +
+          '<td><div class="cell-main">' + esc(m.name) + '</div></td>' +
+          '<td class="nowrap cell-sub">' + alumni + ' alumni<br>' + lowongan + ' lowongan</td>' +
+          '<td><span class="badge ' + (m.active ? "ok" : "muted") + '">' +
+          (m.active ? "Aktif" : "Nonaktif") + '</span></td>' +
+          '<td><div class="cell-actions">' +
+          '<button class="btn btn-ghost btn-sm" data-action="toggle-jurusan" data-id="' + m.id + '">' +
+          (m.active ? "Nonaktifkan" : "Aktifkan") + '</button></div></td></tr>';
+      }).join("") + '</tbody></table></div>' +
+      '<div class="card-foot small muted">Jurusan yang sudah terpakai tidak bisa dihapus — ' +
+      'nonaktifkan saja supaya hilang dari formulir baru sementara riwayat laporannya tetap utuh.</div></div>';
+  }
+
+  function pageAdminLaporan(qs) {
+    // Serapan per jurusan — "terserap" dihitung per alumni, bukan per lamaran,
+    // sama seperti serapan_per_jurusan() di aplikasi.
+    var lulus = qs && qs.get("lulus") ? Number(qs.get("lulus")) : null;
+    var serapan = DB.majors.slice().sort(function (a, b) { return a.sort - b.sort; })
+      .map(function (m) {
+        var alumni = DB.seekers.filter(function (s) {
+          return s.majorId === m.id && (!lulus || Number(s.grad) === lulus);
+        });
+        var ids = alumni.map(function (s) { return s.id; });
+        var lam = DB.applications.filter(function (a) { return ids.indexOf(a.seekerId) !== -1; });
+        var pelamarIds = [], terserapIds = [];
+        lam.forEach(function (a) {
+          if (pelamarIds.indexOf(a.seekerId) === -1) pelamarIds.push(a.seekerId);
+          if (a.status === "accepted" && terserapIds.indexOf(a.seekerId) === -1) terserapIds.push(a.seekerId);
+        });
+        var lowongan = DB.jobs.filter(function (j) {
+          return j.majorId === m.id && j.status === "published";
+        }).length;
+        return {
+          code: m.code, name: m.name, active: m.active,
+          alumni: alumni.length, melamar: pelamarIds.length, lamaran: lam.length,
+          terserap: terserapIds.length, lowongan: lowongan,
+          persen: alumni.length ? Math.round(terserapIds.length / alumni.length * 1000) / 10 : 0
+        };
+      });
+    var totS = serapan.reduce(function (t, r) {
+      t.alumni += r.alumni; t.melamar += r.melamar; t.lamaran += r.lamaran; t.terserap += r.terserap;
+      return t;
+    }, { alumni: 0, melamar: 0, lamaran: 0, terserap: 0 });
+    totS.persen = totS.alumni ? Math.round(totS.terserap / totS.alumni * 1000) / 10 : 0;
+    var angkatan = [];
     DB.seekers.forEach(function (s) {
-      perJurusan[s.major] = perJurusan[s.major] || { pelamar: 0, lamaran: 0, diterima: 0 };
-      perJurusan[s.major].pelamar++;
+      if (s.grad && angkatan.indexOf(Number(s.grad)) === -1) angkatan.push(Number(s.grad));
     });
-    DB.applications.forEach(function (a) {
-      var s = seeker(a.seekerId);
-      if (!s || !perJurusan[s.major]) return;
-      perJurusan[s.major].lamaran++;
-      if (a.status === "accepted") perJurusan[s.major].diterima++;
-    });
+    angkatan.sort(function (a, b) { return b - a; });
 
     var perPerusahaan = DB.companies.map(function (c) {
       var jobs = DB.jobs.filter(function (j) { return j.companyId === c.id; });
@@ -1160,16 +1231,50 @@
         return '<div class="bar"><b>' + n + '</b><i style="height:' + (n / maxB * 100).toFixed(1) + '%"></i>' +
           '<small>' + nm + '</small></div>';
       }).join("") + '</div></div></div>' +
-      '<div class="grid grid-2">' +
-      '<div class="card"><div class="card-head"><h2>Rekap per kompetensi keahlian</h2></div>' +
-      '<div class="table-wrap"><table class="data"><thead><tr><th>Kompetensi Keahlian</th>' +
-      '<th class="right">Pelamar</th><th class="right">Lamaran</th><th class="right">Diterima</th><th class="right">%</th>' +
-      '</tr></thead><tbody>' + Object.keys(perJurusan).map(function (k) {
-        var r = perJurusan[k], pct = r.lamaran ? (r.diterima / r.lamaran * 100) : 0;
-        return '<tr><td class="cell-main">' + esc(k) + '</td><td class="right">' + r.pelamar + '</td>' +
-          '<td class="right">' + r.lamaran + '</td><td class="right">' + r.diterima + '</td>' +
-          '<td class="right"><span class="badge ' + (pct > 20 ? "ok" : "muted") + '">' + pct.toFixed(1) + '%</span></td></tr>';
-      }).join("") + '</tbody></table></div></div>' +
+      '<section class="card mb-3"><div class="card-head">' +
+        '<div><h2>Serapan kerja per kompetensi keahlian</h2>' +
+        '<p class="muted small mb-0">Terserap = jumlah alumni berbeda yang punya minimal satu lamaran diterima. ' +
+        'Satu alumnus yang diterima di dua perusahaan tetap dihitung satu orang.</p></div>' +
+        '<div class="flex gap-sm items-center"><label class="label mb-0">Tahun lulus</label>' +
+        '<select data-filter-lulus style="width:auto"><option value="">Semua angkatan</option>' +
+        angkatan.map(function (t) {
+          return '<option value="' + t + '"' + (lulus === t ? " selected" : "") + '>' + t + '</option>';
+        }).join("") + '</select></div></div>' +
+      '<div class="card-body">' +
+        '<div class="grid grid-4 mb-3">' +
+          statCard("Alumni terdaftar", totS.alumni, lulus ? "angkatan " + lulus : "semua angkatan", "") +
+          statCard("Sudah melamar", totS.melamar, totS.lamaran + " lamaran terkirim", "") +
+          statCard("Terserap kerja", totS.terserap, "diterima minimal satu perusahaan", "ok") +
+          statCard("Tingkat serapan", totS.persen + "%", "terhadap alumni terdaftar", "accent") +
+        '</div>' +
+        '<div class="table-wrap"><table class="data"><thead><tr>' +
+        '<th style="min-width:250px">Kompetensi Keahlian</th><th class="right">Alumni</th>' +
+        '<th class="right">Melamar</th><th class="right">Lamaran</th><th class="right">Terserap</th>' +
+        '<th style="min-width:190px">Tingkat serapan</th><th class="right">Lowongan</th>' +
+        '</tr></thead><tbody>' + serapan.map(function (r) {
+          var warna = r.persen >= 60 ? "ok" : (r.persen >= 30 ? "warn" : "muted");
+          var isi = r.persen >= 60 ? "var(--ok-500)" : (r.persen >= 30 ? "var(--warn-500)" : "var(--line-2)");
+          return '<tr><td><div class="cell-main flex items-center gap-sm">' +
+            '<span class="badge muted">' + esc(r.code) + '</span><span>' + esc(r.name) + '</span>' +
+            (r.active ? "" : '<span class="badge muted">nonaktif</span>') + '</div></td>' +
+            '<td class="right">' + r.alumni + '</td><td class="right">' + r.melamar + '</td>' +
+            '<td class="right">' + r.lamaran + '</td><td class="right strong">' + r.terserap + '</td>' +
+            '<td>' + (r.alumni
+              ? '<div class="flex between items-center gap-sm mb-1">' +
+                '<span class="badge ' + warna + '">' + r.persen + '%</span>' +
+                '<small class="muted">' + r.terserap + ' dari ' + r.alumni + '</small></div>' +
+                '<div style="height:8px;background:var(--line);border-radius:99px;overflow:hidden">' +
+                '<i style="display:block;height:100%;border-radius:99px;width:' + r.persen + '%;background:' + isi + '"></i></div>'
+              : '<span class="muted small">Belum ada alumni terdaftar</span>') + '</td>' +
+            '<td class="right">' + r.lowongan + '</td></tr>';
+        }).join("") +
+        '</tbody><tfoot><tr style="background:var(--surface-2);font-weight:650">' +
+        '<td>Total</td><td class="right">' + totS.alumni + '</td><td class="right">' + totS.melamar + '</td>' +
+        '<td class="right">' + totS.lamaran + '</td><td class="right">' + totS.terserap + '</td>' +
+        '<td><span class="badge ' + (totS.persen >= 60 ? "ok" : "warn") + '">' + totS.persen + '%</span></td>' +
+        '<td></td></tr></tfoot></table></div>' +
+      '</div></section>' +
+      '<div class="grid">' +
       '<div class="card"><div class="card-head"><h2>Perusahaan paling aktif</h2></div>' +
       '<div class="table-wrap"><table class="data"><thead><tr><th>Perusahaan</th>' +
       '<th class="right">Lowongan</th><th class="right">Lamaran masuk</th></tr></thead><tbody>' +
@@ -1329,7 +1434,8 @@
         if (path[1] === "lowongan") return { dash: "admin", path: path, html: pageAdminLowongan(qs) };
         if (path[1] === "lamaran") return { dash: "admin", path: path, html: pageAdminLamaran(qs) };
         if (path[1] === "pengguna") return { dash: "admin", path: path, html: pageAdminPengguna(qs) };
-        if (path[1] === "laporan") return { dash: "admin", path: path, html: pageAdminLaporan() };
+        if (path[1] === "jurusan") return { dash: "admin", path: path, html: pageAdminJurusan() };
+        if (path[1] === "laporan") return { dash: "admin", path: path, html: pageAdminLaporan(qs) };
         if (path[1] === "pengumuman") return { dash: "admin", path: path, html: pageAdminPengumuman() };
         if (path[1] === "log") return { dash: "admin", path: path, html: pageAdminLog() };
         return { dash: "admin", path: path, html: pageAdminDashboard() };
@@ -1363,7 +1469,7 @@
     if (jenis === "lowongan") {
       rows = [["ID", "Judul", "Perusahaan", "Lokasi", "Jurusan", "Status", "Kuota", "Deadline"]].concat(
         DB.jobs.map(function (j) {
-          return [j.id, j.title, company(j.companyId).name, j.location, j.major || "-",
+          return [j.id, j.title, company(j.companyId).name, j.location, majorName(j.majorId, "-"),
                   j.status, j.quota, j.deadline || "-"];
         }));
     } else if (jenis === "perusahaan") {
@@ -1375,7 +1481,7 @@
       rows = [["ID", "Pelamar", "NIS", "Jurusan", "Lulus", "Lowongan", "Perusahaan", "Status", "Tanggal"]].concat(
         DB.applications.map(function (a) {
           var s = seeker(a.seekerId), su = seekerUser(s.id), j = job(a.jobId);
-          return [a.id, su.name, s.nis, s.major, s.grad, j.title, company(j.companyId).name, a.status, a.created];
+          return [a.id, su.name, s.nis, majorName(s.majorId, "-"), s.grad, j.title, company(j.companyId).name, a.status, a.created];
         }));
     }
     var teks = rows.map(function (r) {
@@ -1539,7 +1645,7 @@
         .normalize("NFD").replace(/[̀-ͯ]/g, "")
         .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + (id ? "" : "-" + j.id);
       j.desc = val("desc"); j.req = val("req") || null; j.benefit = val("benefit") || null;
-      j.major = val("major") || null; j.type = val("type") || "full_time";
+      j.majorId = parseInt(val("major"), 10) || null; j.type = val("type") || "full_time";
       j.location = val("location"); j.remote = !!d.get("remote");
       j.min = Number(val("min")) || null; j.max = Number(val("max")) || null;
       j.hidden = !!d.get("hidden");
@@ -1597,6 +1703,26 @@
       addLog("announcement", val("title"));
       save(); flash("Pengumuman disimpan.", "success"); render(); return;
     }
+  });
+
+  // Aktif/nonaktifkan jurusan dari panel admin demo.
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest('[data-action="toggle-jurusan"]');
+    if (!btn) return;
+    var m = major(parseInt(btn.dataset.id, 10));
+    if (!m) return;
+    m.active = !m.active;
+    addLog("toggle_major", m.name + " → " + (m.active ? "aktif" : "nonaktif"));
+    save();
+    flash("Jurusan " + m.name + " kini " + (m.active ? "aktif" : "nonaktif") + ".", "success");
+    render();
+  });
+
+  // Saringan tahun lulus pada laporan serapan.
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest("[data-filter-lulus]");
+    if (!sel) return;
+    location.hash = "#/admin/laporan" + (sel.value ? "?lulus=" + sel.value : "");
   });
 
   window.addEventListener("hashchange", render);

@@ -23,7 +23,7 @@ from app.models import (
 )
 from app.routers.auth import log_activity
 from app.templating import render
-from app.utils import ALLOWED_DOC, ALLOWED_IMG, flash, paginate, save_upload
+from app.utils import ALLOWED_DOC, ALLOWED_IMG, daftar_jurusan, flash, paginate, save_upload
 
 router = APIRouter(prefix="/pelamar", tags=["pencari kerja"], dependencies=[Depends(seeker_required)])
 
@@ -66,8 +66,8 @@ async def dashboard(request: Request, db: Session = Depends(get_db), seeker: See
         .filter((Job.deadline.is_(None)) | (Job.deadline >= date.today()))
         .filter(~Job.id.in_(db.query(Application.job_id).filter(Application.seeker_id == seeker.id)))
     )
-    if seeker.major:
-        rec_q = rec_q.filter(Job.major_target == seeker.major)
+    if seeker.major_id:
+        rec_q = rec_q.filter(Job.major_id == seeker.major_id)
     rekomendasi = rec_q.order_by(Job.published_at.desc().nullslast()).limit(4).all()
     if len(rekomendasi) < 4:
         extra = (
@@ -97,7 +97,7 @@ async def profil(request: Request, db: Session = Depends(get_db), user: User = D
         db.add(seeker)
         db.commit()
         db.refresh(seeker)
-    return render(request, "seeker/profile.html", {"seeker": seeker})
+    return render(request, "seeker/profile.html", {"seeker": seeker, "majors": daftar_jurusan(db)})
 
 
 @router.post("/profil")
@@ -114,7 +114,7 @@ async def simpan_profil(
     birth_date: str = Form(""),
     address: str = Form(""),
     city: str = Form(""),
-    major: str = Form(""),
+    major_id: str = Form(""),
     graduation_year: str = Form(""),
     headline: str = Form(""),
     summary: str = Form(""),
@@ -133,7 +133,7 @@ async def simpan_profil(
     seeker.birth_date = date.fromisoformat(birth_date) if birth_date else None
     seeker.address = address.strip() or None
     seeker.city = city.strip() or None
-    seeker.major = major or None
+    seeker.major_id = int(major_id) if major_id.isdigit() else None
     seeker.graduation_year = int(graduation_year) if graduation_year.isdigit() else None
     seeker.headline = headline.strip() or None
     seeker.summary = summary.strip() or None

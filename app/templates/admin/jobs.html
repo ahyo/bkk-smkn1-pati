@@ -40,7 +40,7 @@
             <a href="/lowongan/{{ j.slug }}" target="_blank">{{ j.title }}</a>
             <span class="badge {{ j.status | badge_lowongan }}">{{ j.status | label_status_lowongan }}</span>
           </h3>
-          <div class="cell-sub">{{ icon('building') }} {{ j.company.name }} · {{ icon('pin') }} {{ j.location }} · {{ icon('cap') }} {{ j.major_target or 'Umum' }}</div>
+          <div class="cell-sub">{{ icon('building') }} {{ j.company.name }} · {{ icon('pin') }} {{ j.location }} · {{ icon('cap') }} {{ j.major.name if j.major else 'Semua jurusan' }}</div>
           <div class="cell-sub">
             {{ icon('money') }} {{ j.salary_display }} · {{ icon('users') }} {{ j.quota }} orang · {{ icon('inbox') }} {{ counts.get(j.id, 0) }} pelamar ·
             {{ icon('eye') }} {{ j.views or 0 }} · {{ icon('clock') }} {{ j.deadline | tanggal if j.deadline else 'tanpa batas' }}

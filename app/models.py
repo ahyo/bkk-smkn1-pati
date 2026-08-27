@@ -95,18 +95,45 @@ COMPANY_STATUS_LABEL = {
     CompanyStatus.SUSPENDED: "Dinonaktifkan",
 }
 
-# Kompetensi keahlian SMK N 1 Pati (bisa disesuaikan lewat halaman admin).
-MAJORS = [
-    "Akuntansi dan Keuangan Lembaga",
-    "Manajemen Perkantoran dan Layanan Bisnis",
-    "Bisnis Daring dan Pemasaran",
-    "Teknik Komputer dan Jaringan",
-    "Rekayasa Perangkat Lunak",
-    "Multimedia / Desain Komunikasi Visual",
-    "Perhotelan",
-    "Kuliner",
-    "Lainnya",
+# Data awal kompetensi keahlian SMK N 1 Pati. Dipakai sekali saat pengisian
+# tabel `majors`; setelah itu jurusan dikelola lewat menu admin.
+DEFAULT_MAJORS: list[tuple[str, str]] = [
+    ("AKL", "Akuntansi dan Keuangan Lembaga"),
+    ("MPLB", "Manajemen Perkantoran dan Layanan Bisnis"),
+    ("BDP", "Bisnis Daring dan Pemasaran"),
+    ("TKJ", "Teknik Komputer dan Jaringan"),
+    ("RPL", "Rekayasa Perangkat Lunak"),
+    ("DKV", "Multimedia / Desain Komunikasi Visual"),
+    ("PHT", "Perhotelan"),
+    ("KUL", "Kuliner"),
+    ("LN", "Lainnya"),
 ]
+
+
+class Major(Base):
+    """Kompetensi keahlian (jurusan) yang dibuka sekolah.
+
+    Dijadikan tabel tersendiri, bukan teks bebas, supaya laporan serapan kerja
+    per jurusan tidak pecah gara-gara perbedaan penulisan.
+    """
+
+    __tablename__ = "majors"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String(140), unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    seekers: Mapped[list[Seeker]] = relationship(back_populates="major")
+    jobs: Mapped[list[Job]] = relationship(back_populates="major")
+
+    def __str__(self) -> str:
+        # Membuat {{ seeker.major }} di template tetap mencetak nama jurusan.
+        return self.name
 
 
 class User(Base):
@@ -179,7 +206,9 @@ class Seeker(Base):
     birth_date: Mapped[date | None] = mapped_column(Date)
     address: Mapped[str | None] = mapped_column(Text)
     city: Mapped[str | None] = mapped_column(String(120), index=True)
-    major: Mapped[str | None] = mapped_column(String(120), index=True)
+    major_id: Mapped[int | None] = mapped_column(
+        ForeignKey("majors.id", ondelete="SET NULL"), index=True
+    )
     graduation_year: Mapped[int | None] = mapped_column(Integer, index=True)
     is_alumni: Mapped[bool] = mapped_column(Boolean, default=True)
     headline: Mapped[str | None] = mapped_column(String(180))
@@ -193,6 +222,7 @@ class Seeker(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="seeker")
+    major: Mapped[Major | None] = relationship(back_populates="seekers")
     applications: Mapped[list[Application]] = relationship(back_populates="seeker", cascade="all, delete-orphan")
     saved_jobs: Mapped[list[SavedJob]] = relationship(back_populates="seeker", cascade="all, delete-orphan")
 
@@ -205,7 +235,7 @@ class Seeker(Base):
         """Persentase kelengkapan profil — dipakai untuk nudge di dashboard."""
         fields = [
             self.phone, self.gender, self.birth_date, self.address, self.city,
-            self.major, self.graduation_year, self.headline, self.summary,
+            self.major_id, self.graduation_year, self.headline, self.summary,
             self.skills, self.education, self.cv_file, self.photo,
         ]
         filled = sum(1 for f in fields if f)
@@ -222,7 +252,9 @@ class Job(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     requirements: Mapped[str | None] = mapped_column(Text)
     benefits: Mapped[str | None] = mapped_column(Text)
-    major_target: Mapped[str | None] = mapped_column(String(120), index=True)
+    major_id: Mapped[int | None] = mapped_column(
+        ForeignKey("majors.id", ondelete="SET NULL"), index=True
+    )
     employment_type: Mapped[EmploymentType] = mapped_column(
         Enum(EmploymentType, name="employment_type_enum"), default=EmploymentType.FULL_TIME, index=True
     )
@@ -248,6 +280,7 @@ class Job(Base):
     )
 
     company: Mapped[Company] = relationship(back_populates="jobs")
+    major: Mapped[Major | None] = relationship(back_populates="jobs")
     applications: Mapped[list[Application]] = relationship(back_populates="job", cascade="all, delete-orphan")
 
     @property

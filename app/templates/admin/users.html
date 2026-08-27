@@ -74,7 +74,7 @@
               {{ u.company.industry or '-' }} · {{ u.company.city or '-' }}<br>
               <span class="badge {{ u.company.status | badge_perusahaan }}">{{ u.company.status | label_status_perusahaan }}</span>
             {% elif u.role == Role.SEEKER and u.seeker %}
-              {{ u.seeker.major or '-' }}{% if u.seeker.graduation_year %} · lulus {{ u.seeker.graduation_year }}{% endif %}<br>
+              {{ u.seeker.major.name if u.seeker.major else '-' }}{% if u.seeker.graduation_year %} · lulus {{ u.seeker.graduation_year }}{% endif %}<br>
               profil {{ u.seeker.completeness }}% lengkap
             {% else %}Administrator portal{% endif %}
           </td>

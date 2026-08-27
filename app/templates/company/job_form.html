@@ -83,11 +83,11 @@
     <div class="card-body">
       <div class="form-row">
         <div class="field">
-          <label for="major_target">Kompetensi keahlian yang dicari</label>
-          <select id="major_target" name="major_target">
+          <label for="major_id">Kompetensi keahlian yang dicari</label>
+          <select id="major_id" name="major_id">
             <option value="">Semua jurusan</option>
-            {% for m in MAJORS %}
-              <option value="{{ m }}" {{ 'selected' if job and job.major_target == m }}>{{ m }}</option>
+            {% for m in majors %}
+              <option value="{{ m.id }}" {{ 'selected' if job and job.major_id == m.id }}>{{ m.code }} — {{ m.name }}</option>
             {% endfor %}
           </select>
         </div>

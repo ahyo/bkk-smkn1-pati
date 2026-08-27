@@ -43,7 +43,7 @@
             <div class="cell-sub">{{ a.seeker.user.email }}{% if a.seeker.nis %} · NIS {{ a.seeker.nis }}{% endif %}</div>
           </td>
           <td class="cell-sub">
-            {{ a.seeker.major or '-' }}
+            {{ a.seeker.major.name if a.seeker.major else '-' }}
             {% if a.seeker.graduation_year %}<div class="tiny">lulus {{ a.seeker.graduation_year }}</div>{% endif %}
           </td>
           <td><a href="/lowongan/{{ a.job.slug }}" target="_blank">{{ a.job.title }}</a></td>

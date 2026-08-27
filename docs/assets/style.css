@@ -137,8 +137,8 @@ main{flex:1;padding:1.75rem 0 3rem}
 .grid-2{grid-template-columns:repeat(2,1fr)}
 .grid-3{grid-template-columns:repeat(3,1fr)}
 .grid-4{grid-template-columns:repeat(4,1fr)}
-.layout-side{display:grid;grid-template-columns:270px 1fr;gap:1.5rem;align-items:start}
-.layout-side-r{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start}
+.layout-side{display:grid;grid-template-columns:270px minmax(0,1fr);gap:1.5rem;align-items:start}
+.layout-side-r{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.5rem;align-items:start}
 
 /* ── Sidebar dashboard ────────────────────────────────────────────────── */
 .sidebar{
@@ -277,7 +277,7 @@ legend{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weigh
 .flash-wrap{position:sticky;top:74px;z-index:50}
 
 /* ── Tabel ────────────────────────────────────────────────────────────── */
-.table-wrap{overflow-x:auto;border-radius:var(--radius-lg)}
+.table-wrap{overflow-x:auto;border-radius:var(--radius-lg);max-width:100%}
 table.data{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--surface)}
 table.data th{
   text-align:left;padding:.7rem .9rem;background:var(--surface-2);border-bottom:1px solid var(--line);

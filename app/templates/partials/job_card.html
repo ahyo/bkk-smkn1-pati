@@ -18,7 +18,7 @@
     </div>
     <div class="job-meta">
       <span>{{ icon('pin') }} {{ job.location }}{% if job.is_remote %} · Remote{% endif %}</span>
-      {% if job.major_target %}<span>{{ icon('cap') }} {{ job.major_target }}</span>{% endif %}
+      {% if job.major %}<span>{{ icon('cap') }} {{ job.major.name }}</span>{% endif %}
       <span>{{ icon('users') }} {{ job.quota }} posisi</span>
     </div>
     <div class="job-salary">{{ job.salary_display }}</div>

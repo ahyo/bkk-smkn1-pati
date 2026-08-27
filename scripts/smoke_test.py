@@ -17,7 +17,9 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Application, Company, CompanyStatus, Job, JobStatus, Role, Seeker, User  # noqa: E402
+from app.models import (  # noqa: E402
+    Application, Company, CompanyStatus, Job, JobStatus, Major, Role, Seeker, User,
+)
 
 OK, GAGAL = [], []
 
@@ -77,10 +79,71 @@ def main() -> int:
                   "/admin/lowongan?status_filter=pending", "/admin/pengguna", "/admin/pengguna?role=seeker",
                   "/admin/lamaran", "/admin/laporan", "/admin/pengumuman", "/admin/log",
                   "/admin/laporan/ekspor?jenis=lamaran", "/admin/laporan/ekspor?jenis=lowongan",
-                  "/admin/laporan/ekspor?jenis=perusahaan"]:
+                  "/admin/laporan/ekspor?jenis=perusahaan",
+                  "/admin/jurusan", "/admin/laporan?lulus=2025",
+                  "/admin/laporan/ekspor?jenis=serapan"]:
             get(c, u)
         r = c.get("/admin/laporan/ekspor?jenis=lamaran")
         cek("Ekspor CSV berisi header", r.text.startswith("ID,"), r.text[:40])
+
+        # ── Jurusan & laporan serapan ──────────────────────────────────────
+        r = c.get("/admin/laporan/ekspor?jenis=serapan")
+        cek("Ekspor serapan berisi kolom jurusan",
+            r.text.startswith("Kode,Kompetensi Keahlian,"), r.text[:60])
+
+        r = c.get("/admin/laporan")
+        cek("Laporan menampilkan serapan per jurusan",
+            "Serapan kerja per kompetensi keahlian" in r.text)
+
+        db = SessionLocal()
+        try:
+            jumlah_awal = db.query(Major).count()
+        finally:
+            db.close()
+
+        r = c.post("/admin/jurusan", data={
+            "code": "UJI", "name": "Jurusan Uji Asap", "sort_order": "99", "is_active": "1",
+        }, follow_redirects=False)
+        cek("Tambah jurusan", r.status_code == 303, f"status {r.status_code}")
+
+        db = SessionLocal()
+        try:
+            baru = db.query(Major).filter(Major.code == "UJI").first()
+            cek("Jurusan baru tersimpan dengan slug", bool(baru and baru.slug == "jurusan-uji-asap"),
+                getattr(baru, "slug", None))
+            cek("Jumlah jurusan bertambah", db.query(Major).count() == jumlah_awal + 1)
+            uji_id = baru.id if baru else 0
+        finally:
+            db.close()
+
+        r = c.post("/admin/jurusan", data={
+            "code": "UJI", "name": "Nama Lain", "sort_order": "0", "is_active": "1",
+        }, follow_redirects=True)
+        cek("Tolak kode jurusan ganda", "sudah dipakai" in r.text)
+
+        if uji_id:
+            r = c.post(f"/admin/jurusan/{uji_id}/aktif", follow_redirects=False)
+            cek("Nonaktifkan jurusan", r.status_code == 303, f"status {r.status_code}")
+            r = c.post(f"/admin/jurusan/{uji_id}/hapus", follow_redirects=False)
+            cek("Hapus jurusan tak terpakai", r.status_code == 303, f"status {r.status_code}")
+
+        # Jurusan yang sudah dipakai tidak boleh terhapus.
+        db = SessionLocal()
+        try:
+            terpakai = (
+                db.query(Major).join(Seeker, Seeker.major_id == Major.id).first()
+            )
+            terpakai_id = terpakai.id if terpakai else 0
+        finally:
+            db.close()
+        if terpakai_id:
+            r = c.post(f"/admin/jurusan/{terpakai_id}/hapus", follow_redirects=True)
+            cek("Tolak hapus jurusan yang masih dipakai", "tidak dapat dihapus" in r.text)
+            db = SessionLocal()
+            try:
+                cek("Jurusan terpakai masih ada", db.get(Major, terpakai_id) is not None)
+            finally:
+                db.close()
 
     print("\n── Peran perusahaan ──────────────────────────────────────────")
     with TestClient(app) as c:

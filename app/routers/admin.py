@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import case, func, or_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -23,6 +23,7 @@ from app.models import (
     CompanyStatus,
     Job,
     JobStatus,
+    Major,
     Role,
     Seeker,
     User,
@@ -30,9 +31,83 @@ from app.models import (
 from app.routers.auth import log_activity
 from app.security import hash_password, password_issues
 from app.templating import render
-from app.utils import bulan_tahun, flash, paginate
+from app.utils import bulan_tahun, flash, paginate, slugify
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(admin_required)])
+
+
+def serapan_per_jurusan(db: Session, tahun_lulus: int | None = None) -> list[dict]:
+    """Rekap serapan kerja per kompetensi keahlian.
+
+    "Terserap" dihitung sebagai jumlah *alumni berbeda* yang punya minimal satu
+    lamaran berstatus diterima — bukan jumlah lamaran diterima, karena satu
+    alumnus bisa diterima di lebih dari satu perusahaan dan itu tetap satu
+    orang yang terserap.
+
+    Saringan tahun lulus sengaja diletakkan pada klausa ON, bukan WHERE, agar
+    jurusan yang belum punya alumni pada tahun itu tetap muncul dengan nilai 0.
+    """
+    join_seeker = [Seeker.major_id == Major.id]
+    if tahun_lulus:
+        join_seeker.append(Seeker.graduation_year == tahun_lulus)
+
+    rows = (
+        db.query(
+            Major.id.label("id"),
+            Major.code.label("code"),
+            Major.name.label("name"),
+            Major.is_active.label("is_active"),
+            func.count(func.distinct(Seeker.id)).label("alumni"),
+            func.count(func.distinct(case((Application.id.isnot(None), Seeker.id)))).label("melamar"),
+            func.count(Application.id).label("lamaran"),
+            func.count(
+                func.distinct(case((Application.status == ApplicationStatus.ACCEPTED, Seeker.id)))
+            ).label("terserap"),
+        )
+        .select_from(Major)
+        .outerjoin(Seeker, and_(*join_seeker))
+        .outerjoin(Application, Application.seeker_id == Seeker.id)
+        .group_by(Major.id, Major.code, Major.name, Major.is_active, Major.sort_order)
+        .order_by(Major.sort_order, Major.name)
+        .all()
+    )
+
+    # Lowongan tayang per jurusan dihitung terpisah supaya tidak menggandakan
+    # baris pada join di atas.
+    lowongan = dict(
+        db.query(Job.major_id, func.count(Job.id))
+        .filter(Job.status == JobStatus.PUBLISHED)
+        .group_by(Job.major_id)
+        .all()
+    )
+
+    hasil = []
+    for r in rows:
+        hasil.append({
+            "id": r.id,
+            "code": r.code,
+            "name": r.name,
+            "is_active": r.is_active,
+            "alumni": r.alumni,
+            "melamar": r.melamar,
+            "lamaran": r.lamaran,
+            "terserap": r.terserap,
+            "lowongan": lowongan.get(r.id, 0),
+            "persen": round(r.terserap / r.alumni * 100, 1) if r.alumni else 0.0,
+            "persen_pelamar": round(r.terserap / r.melamar * 100, 1) if r.melamar else 0.0,
+        })
+    return hasil
+
+
+def tahun_lulus_tersedia(db: Session) -> list[int]:
+    return [
+        int(r[0])
+        for r in db.query(Seeker.graduation_year)
+        .filter(Seeker.graduation_year.isnot(None))
+        .distinct()
+        .order_by(Seeker.graduation_year.desc())
+        .all()
+    ]
 
 
 @router.get("")
@@ -81,9 +156,11 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     tren_max = max([t["value"] for t in tren], default=1) or 1
 
     per_jurusan = (
-        db.query(Job.major_target, func.count(Job.id))
+        db.query(Major.name, func.count(Job.id))
+        .select_from(Job)
+        .outerjoin(Major, Job.major_id == Major.id)
         .filter(Job.status == JobStatus.PUBLISHED)
-        .group_by(Job.major_target)
+        .group_by(Major.name)
         .order_by(func.count(Job.id).desc())
         .limit(8)
         .all()
@@ -100,7 +177,7 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
             "antrian_lowongan": antrian_lowongan,
             "tren": tren,
             "tren_max": tren_max,
-            "per_jurusan": [(m or "Umum", c) for m, c in per_jurusan],
+            "per_jurusan": [(m or "Semua jurusan", c) for m, c in per_jurusan],
             "logs": logs,
         },
     )
@@ -304,6 +381,120 @@ async def tambah_admin(
     return redirect("/admin/pengguna")
 
 
+# ── Kompetensi keahlian (jurusan) ───────────────────────────────────────────
+
+@router.get("/jurusan")
+async def kelola_jurusan(request: Request, db: Session = Depends(get_db)):
+    majors = db.query(Major).order_by(Major.sort_order, Major.name).all()
+
+    dipakai_seeker = dict(
+        db.query(Seeker.major_id, func.count(Seeker.id)).group_by(Seeker.major_id).all()
+    )
+    dipakai_job = dict(
+        db.query(Job.major_id, func.count(Job.id)).group_by(Job.major_id).all()
+    )
+    return render(
+        request,
+        "admin/majors.html",
+        {"majors": majors, "dipakai_seeker": dipakai_seeker, "dipakai_job": dipakai_job},
+    )
+
+
+@router.post("/jurusan")
+async def simpan_jurusan(
+    request: Request,
+    db: Session = Depends(get_db),
+    admin: User = Depends(admin_required),
+    major_id: str = Form(""),
+    code: str = Form(...),
+    name: str = Form(...),
+    description: str = Form(""),
+    sort_order: str = Form("0"),
+    is_active: str = Form(""),
+):
+    code = code.strip().upper()
+    name = name.strip()
+
+    bentrok_q = db.query(Major).filter(or_(Major.code == code, Major.name == name))
+    if major_id.isdigit():
+        bentrok_q = bentrok_q.filter(Major.id != int(major_id))
+    bentrok = bentrok_q.first()
+    if bentrok:
+        flash(request, f"Kode atau nama jurusan sudah dipakai oleh '{bentrok.name}'.", "danger")
+        return redirect("/admin/jurusan")
+
+    if major_id.isdigit():
+        major = db.get(Major, int(major_id))
+        if not major:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Jurusan tidak ditemukan.")
+        aksi = "update_major"
+    else:
+        major = Major()
+        db.add(major)
+        aksi = "create_major"
+
+    major.code = code
+    major.name = name
+    major.slug = slugify(name)
+    major.description = description.strip() or None
+    major.sort_order = int(sort_order) if sort_order.lstrip("-").isdigit() else 0
+    major.is_active = bool(is_active)
+
+    log_activity(db, admin, aksi, f"Jurusan {code} — {name}")
+    db.commit()
+    flash(request, f"Jurusan {name} disimpan.", "success")
+    return redirect("/admin/jurusan")
+
+
+@router.post("/jurusan/{major_id}/aktif")
+async def toggle_jurusan(
+    major_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(admin_required)
+):
+    major = db.get(Major, major_id)
+    if not major:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Jurusan tidak ditemukan.")
+
+    major.is_active = not major.is_active
+    log_activity(db, admin, "toggle_major", f"{major.name} → {'aktif' if major.is_active else 'nonaktif'}")
+    db.commit()
+    flash(
+        request,
+        f"Jurusan {major.name} kini {'aktif' if major.is_active else 'nonaktif'}. "
+        "Jurusan nonaktif tidak muncul pada formulir baru, tetapi data lamanya tetap utuh.",
+        "success",
+    )
+    return redirect("/admin/jurusan")
+
+
+@router.post("/jurusan/{major_id}/hapus")
+async def hapus_jurusan(
+    major_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(admin_required)
+):
+    major = db.get(Major, major_id)
+    if not major:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Jurusan tidak ditemukan.")
+
+    dipakai = (
+        db.query(Seeker).filter(Seeker.major_id == major.id).count()
+        + db.query(Job).filter(Job.major_id == major.id).count()
+    )
+    if dipakai:
+        flash(
+            request,
+            f"Jurusan {major.name} masih dipakai {dipakai} data dan tidak dapat dihapus. "
+            "Nonaktifkan saja agar riwayat laporan tetap utuh.",
+            "warning",
+        )
+        return redirect("/admin/jurusan")
+
+    nama = major.name
+    db.delete(major)
+    log_activity(db, admin, "delete_major", nama)
+    db.commit()
+    flash(request, f"Jurusan {nama} dihapus.", "info")
+    return redirect("/admin/jurusan")
+
+
 # ── Lamaran & laporan ───────────────────────────────────────────────────────
 
 @router.get("/lamaran")
@@ -337,23 +528,27 @@ async def kelola_lamaran(
 
 
 @router.get("/laporan")
-async def laporan(request: Request, db: Session = Depends(get_db), tahun: str = ""):
+async def laporan(
+    request: Request,
+    db: Session = Depends(get_db),
+    tahun: str = "",
+    lulus: str = "",
+):
     tahun_int = int(tahun) if tahun.isdigit() else date.today().year
+    tahun_lulus = int(lulus) if lulus.isdigit() else None
 
-    per_jurusan = (
-        db.query(
-            Seeker.major,
-            func.count(func.distinct(Seeker.id)).label("pelamar"),
-            func.count(Application.id).label("lamaran"),
-            func.coalesce(
-                func.sum(case((Application.status == ApplicationStatus.ACCEPTED, 1), else_=0)), 0
-            ).label("diterima"),
-        )
-        .outerjoin(Application, Application.seeker_id == Seeker.id)
-        .group_by(Seeker.major)
-        .order_by(func.count(Application.id).desc())
-        .all()
+    per_jurusan = serapan_per_jurusan(db, tahun_lulus)
+    total_serapan = {
+        "alumni": sum(r["alumni"] for r in per_jurusan),
+        "melamar": sum(r["melamar"] for r in per_jurusan),
+        "lamaran": sum(r["lamaran"] for r in per_jurusan),
+        "terserap": sum(r["terserap"] for r in per_jurusan),
+    }
+    total_serapan["persen"] = (
+        round(total_serapan["terserap"] / total_serapan["alumni"] * 100, 1)
+        if total_serapan["alumni"] else 0.0
     )
+    serapan_max = max((r["alumni"] for r in per_jurusan), default=1) or 1
 
     per_perusahaan = (
         db.query(Company.name, func.count(Job.id).label("lowongan"), func.count(Application.id).label("lamaran"))
@@ -383,26 +578,44 @@ async def laporan(request: Request, db: Session = Depends(get_db), tahun: str = 
         "admin/reports.html",
         {
             "per_jurusan": per_jurusan,
+            "total_serapan": total_serapan,
+            "serapan_max": serapan_max,
             "per_perusahaan": per_perusahaan,
             "bulan_map": bulan_map,
             "bulan_max": max(bulan_map.values(), default=1) or 1,
             "tahun": tahun_int,
             "tahun_tersedia": tahun_tersedia,
+            "tahun_lulus": tahun_lulus,
+            "lulus_tersedia": tahun_lulus_tersedia(db),
         },
     )
 
 
 @router.get("/laporan/ekspor")
-async def ekspor_csv(db: Session = Depends(get_db), jenis: str = "lamaran"):
+async def ekspor_csv(db: Session = Depends(get_db), jenis: str = "lamaran", lulus: str = ""):
+    tahun_lulus = int(lulus) if lulus.isdigit() else None
     buf = io.StringIO()
     writer = csv.writer(buf)
 
-    if jenis == "lowongan":
+    if jenis == "serapan":
+        writer.writerow([
+            "Kode", "Kompetensi Keahlian", "Alumni Terdaftar", "Melamar",
+            "Total Lamaran", "Terserap Kerja", "Serapan thd Alumni (%)",
+            "Serapan thd Pelamar (%)", "Lowongan Tayang",
+        ])
+        for r in serapan_per_jurusan(db, tahun_lulus):
+            writer.writerow([
+                r["code"], r["name"], r["alumni"], r["melamar"], r["lamaran"],
+                r["terserap"], r["persen"], r["persen_pelamar"], r["lowongan"],
+            ])
+        nama = f"serapan-jurusan{'-lulus' + str(tahun_lulus) if tahun_lulus else ''}"
+    elif jenis == "lowongan":
         writer.writerow(["ID", "Judul", "Perusahaan", "Lokasi", "Jurusan", "Status", "Kuota", "Deadline", "Dibuat"])
-        for j in db.query(Job).options(joinedload(Job.company)).order_by(Job.id).all():
+        q = db.query(Job).options(joinedload(Job.company), joinedload(Job.major)).order_by(Job.id)
+        for j in q.all():
             writer.writerow([
                 j.id, j.title, j.company.name if j.company else "-", j.location,
-                j.major_target or "-", j.status.value, j.quota,
+                j.major.name if j.major else "-", j.status.value, j.quota,
                 j.deadline or "-", j.created_at.date() if j.created_at else "-",
             ])
         nama = "lowongan"
@@ -420,13 +633,15 @@ async def ekspor_csv(db: Session = Depends(get_db), jenis: str = "lamaran"):
             db.query(Application)
             .options(
                 joinedload(Application.seeker).joinedload(Seeker.user),
+                joinedload(Application.seeker).joinedload(Seeker.major),
                 joinedload(Application.job).joinedload(Job.company),
             )
             .order_by(Application.id)
         )
         for a in q.all():
             writer.writerow([
-                a.id, a.seeker.user.full_name, a.seeker.nis or "-", a.seeker.major or "-",
+                a.id, a.seeker.user.full_name, a.seeker.nis or "-",
+                a.seeker.major.name if a.seeker.major else "-",
                 a.seeker.graduation_year or "-", a.job.title,
                 a.job.company.name if a.job.company else "-",
                 a.status.value, a.created_at.date() if a.created_at else "-",

@@ -59,7 +59,7 @@
             </div>
           </td>
           <td>{{ a.job.title }}</td>
-          <td class="cell-sub">{{ a.seeker.major or '-' }}</td>
+          <td class="cell-sub">{{ a.seeker.major.name if a.seeker.major else '-' }}</td>
           <td class="nowrap cell-sub">{{ a.created_at | tanggal }}</td>
           <td><span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span></td>
           <td class="right"><a class="btn btn-outline btn-sm" href="/perusahaan/pelamar/{{ a.id }}">Tinjau</a></td>

@@ -38,6 +38,16 @@ def unique_slug(db: Session, model, base: str) -> str:
     return candidate
 
 
+def daftar_jurusan(db: Session, semua: bool = False) -> list:
+    """Jurusan untuk mengisi dropdown; secara baku hanya yang masih aktif."""
+    from app.models import Major
+
+    q = db.query(Major)
+    if not semua:
+        q = q.filter(Major.is_active.is_(True))
+    return q.order_by(Major.sort_order, Major.name).all()
+
+
 def tanggal(value: date | datetime | None, with_time: bool = False) -> str:
     if not value:
         return "-"

@@ -49,7 +49,7 @@
       <div class="job-foot">
         <div class="chips">
           {% if a.cv_file %}<a class="chip" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">{{ icon('file') }} CV terkirim</a>{% endif %}
-          <span class="chip">{{ icon('cap') }} {{ a.job.major_target or 'Umum' }}</span>
+          <span class="chip">{{ icon('cap') }} {{ a.job.major.name if a.job.major else 'Semua jurusan' }}</span>
         </div>
         {% if a.status.value not in ['accepted','rejected','withdrawn'] %}
         <form method="post" action="/pelamar/lamaran/{{ a.id }}/batal"

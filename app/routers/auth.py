@@ -12,7 +12,7 @@ from app.deps import login_required, redirect
 from app.models import ActivityLog, Company, CompanyStatus, Role, Seeker, User
 from app.security import hash_password, password_issues, verify_password
 from app.templating import render
-from app.utils import flash, unique_slug
+from app.utils import daftar_jurusan, flash, unique_slug
 
 router = APIRouter(tags=["auth"])
 
@@ -87,8 +87,8 @@ async def pilih_pendaftaran(request: Request):
 # ── Registrasi pencari kerja ────────────────────────────────────────────────
 
 @router.get("/daftar/pencari-kerja")
-async def form_daftar_pelamar(request: Request):
-    return render(request, "auth/register_seeker.html", {"form": {}})
+async def form_daftar_pelamar(request: Request, db: Session = Depends(get_db)):
+    return render(request, "auth/register_seeker.html", {"form": {}, "majors": daftar_jurusan(db)})
 
 
 @router.post("/daftar/pencari-kerja")
@@ -99,7 +99,7 @@ async def proses_daftar_pelamar(
     email: str = Form(...),
     phone: str = Form(""),
     nis: str = Form(""),
-    major: str = Form(""),
+    major_id: str = Form(""),
     graduation_year: str = Form(""),
     password: str = Form(...),
     password_confirm: str = Form(...),
@@ -107,7 +107,7 @@ async def proses_daftar_pelamar(
 ):
     form = {
         "full_name": full_name, "email": email, "phone": phone,
-        "nis": nis, "major": major, "graduation_year": graduation_year,
+        "nis": nis, "major_id": major_id, "graduation_year": graduation_year,
     }
     email = email.strip().lower()
     errors: list[str] = []
@@ -123,7 +123,10 @@ async def proses_daftar_pelamar(
     if errors:
         for e in errors:
             flash(request, e, "danger")
-        return render(request, "auth/register_seeker.html", {"form": form}, status_code=400)
+        return render(
+            request, "auth/register_seeker.html",
+            {"form": form, "majors": daftar_jurusan(db)}, status_code=400,
+        )
 
     user = User(
         email=email,
@@ -139,7 +142,7 @@ async def proses_daftar_pelamar(
             user_id=user.id,
             phone=phone.strip() or None,
             nis=nis.strip() or None,
-            major=major or None,
+            major_id=int(major_id) if major_id.isdigit() else None,
             graduation_year=int(graduation_year) if graduation_year.isdigit() else None,
         )
     )

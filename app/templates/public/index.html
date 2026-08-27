@@ -16,7 +16,7 @@
       <input type="text" name="lokasi" placeholder="Kota / kabupaten">
       <select name="jurusan">
         <option value="">Semua Kompetensi Keahlian</option>
-        {% for m in MAJORS %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+        {% for m in majors %}<option value="{{ m.slug }}">{{ m.name }}</option>{% endfor %}
       </select>
       <button class="btn btn-accent" type="submit">{{ icon('search') }} Cari Lowongan</button>
     </form>
@@ -83,8 +83,8 @@
       </div>
     </div>
     <div class="chips">
-      {% for nama, jumlah in top_majors %}
-        <a class="chip" href="/lowongan?jurusan={{ nama | urlencode }}">{{ icon('cap') }} {{ nama }} <b>{{ jumlah }}</b></a>
+      {% for nama, slug, jumlah in top_majors %}
+        <a class="chip" href="/lowongan{{ '?jurusan=' ~ slug if slug }}">{{ icon('cap') }} {{ nama }} <b>{{ jumlah }}</b></a>
       {% endfor %}
     </div>
   </div>

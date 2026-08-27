@@ -13,6 +13,7 @@ from app.models import (
     Announcement,
     Application,
     Company,
+    Major,
     CompanyStatus,
     EmploymentType,
     Job,
@@ -23,7 +24,7 @@ from app.models import (
     User,
 )
 from app.templating import render
-from app.utils import paginate
+from app.utils import daftar_jurusan, paginate
 
 router = APIRouter(tags=["publik"])
 
@@ -55,8 +56,9 @@ async def beranda(request: Request, db: Session = Depends(get_db)):
 
     top_majors = (
         published_jobs(db)
-        .with_entities(Job.major_target, func.count(Job.id))
-        .group_by(Job.major_target)
+        .outerjoin(Major, Job.major_id == Major.id)
+        .with_entities(Major.name, Major.slug, func.count(Job.id))
+        .group_by(Major.name, Major.slug)
         .order_by(func.count(Job.id).desc())
         .limit(6)
         .all()
@@ -84,9 +86,10 @@ async def beranda(request: Request, db: Session = Depends(get_db)):
         {
             "jobs": jobs,
             "stats": stats,
-            "top_majors": [(m or "Umum", c) for m, c in top_majors],
+            "top_majors": [(nama or "Semua jurusan", slug or "", c) for nama, slug, c in top_majors],
             "partners": partners,
             "announcements": announcements,
+            "majors": daftar_jurusan(db),
         },
     )
 
@@ -110,7 +113,7 @@ async def daftar_lowongan(
     if lokasi:
         query = query.filter(Job.location.ilike(f"%{lokasi.strip()}%"))
     if jurusan:
-        query = query.filter(Job.major_target == jurusan)
+        query = query.join(Major, Job.major_id == Major.id).filter(Major.slug == jurusan)
     if tipe:
         try:
             query = query.filter(Job.employment_type == EmploymentType(tipe))
@@ -140,6 +143,7 @@ async def daftar_lowongan(
             "meta": meta,
             "filters": {"q": q, "lokasi": lokasi, "jurusan": jurusan, "tipe": tipe, "urut": urut},
             "locations": locations,
+            "majors": daftar_jurusan(db),
         },
     )
 
@@ -182,7 +186,7 @@ async def detail_lowongan(slug: str, request: Request, db: Session = Depends(get
     related = (
         published_jobs(db)
         .filter(Job.id != job.id)
-        .filter(or_(Job.major_target == job.major_target, Job.company_id == job.company_id))
+        .filter(or_(Job.major_id == job.major_id, Job.company_id == job.company_id))
         .order_by(Job.published_at.desc().nullslast())
         .limit(4)
         .all()

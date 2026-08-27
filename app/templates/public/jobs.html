@@ -25,7 +25,7 @@
       <label class="label" for="jurusan">Kompetensi keahlian</label>
       <select id="jurusan" name="jurusan">
         <option value="">Semua jurusan</option>
-        {% for m in MAJORS %}<option value="{{ m }}" {{ 'selected' if filters.jurusan == m }}>{{ m }}</option>{% endfor %}
+        {% for m in majors %}<option value="{{ m.slug }}" {{ 'selected' if filters.jurusan == m.slug }}>{{ m.name }}</option>{% endfor %}
       </select>
     </div>
     <div>

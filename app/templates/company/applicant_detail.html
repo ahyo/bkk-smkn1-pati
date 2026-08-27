@@ -18,7 +18,7 @@
           <p class="muted mb-1">{{ app.seeker.headline or 'Pencari kerja' }}</p>
           <div class="chips">
             <span class="badge {{ app.status | badge_lamaran }}">{{ app.status | label_status_lamaran }}</span>
-            {% if app.seeker.major %}<span class="chip">{{ icon('cap') }} {{ app.seeker.major }}</span>{% endif %}
+            {% if app.seeker.major %}<span class="chip">{{ icon('cap') }} {{ app.seeker.major.name }}</span>{% endif %}
             {% if app.seeker.graduation_year %}<span class="chip">{{ icon('calendar') }} Lulus {{ app.seeker.graduation_year }}</span>{% endif %}
             {% if app.seeker.open_to_work %}<span class="badge ok">Terbuka untuk kerja</span>{% endif %}
           </div>

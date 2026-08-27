@@ -54,8 +54,12 @@ Dibangun dengan **FastAPI + Jinja2 + PostgreSQL**, tanpa framework JavaScript
 - Moderasi lowongan dengan catatan yang terbaca oleh perusahaan.
 - Kelola pengguna: aktif/nonaktif, reset kata sandi, dan penambahan admin baru.
 - Pemantauan seluruh lamaran lintas perusahaan.
-- **Laporan & rekap**: lamaran per bulan, rekap per kompetensi keahlian
-  (pelamar/lamaran/diterima/persentase), perusahaan paling aktif, ekspor **CSV**, dan tampilan cetak.
+- **Kompetensi keahlian**: data induk jurusan (kode, nama, urutan, aktif/nonaktif).
+  Jurusan yang sudah terpakai tidak bisa dihapus, hanya dinonaktifkan, supaya
+  riwayat laporan tetap utuh.
+- **Laporan serapan kerja per jurusan**: alumni terdaftar, yang melamar, total lamaran,
+  jumlah terserap, dan tingkat serapan — dapat disaring per tahun lulus dan diekspor CSV.
+- **Laporan & rekap** lain: lamaran per bulan, perusahaan paling aktif, dan tampilan cetak.
 - Pengumuman yang tampil di beranda publik.
 - Log aktivitas untuk keperluan audit.
 
@@ -89,7 +93,8 @@ bkk-smk1-pati/
 ├── docs/                  # Demo statis untuk GitHub Pages
 │   └── assets/demo.css    # Gaya khusus demo (tidak pernah tertimpa)
 ├── scripts/
-│   ├── smoke_test.py      # Uji asap 52 pemeriksaan
+│   ├── smoke_test.py      # Uji asap 65 pemeriksaan
+│   ├── migrate_jurusan.py # Migrasi jurusan teks → tabel master
 │   └── build_demo_assets.py  # Sinkronkan CSS + ikon ke docs/
 ├── .github/workflows/     # CI + deploy GitHub Pages
 ├── docker-compose.yml     # PostgreSQL + aplikasi
@@ -221,9 +226,10 @@ sesuaikan dengan jurusan yang benar-benar dibuka sekolah.
 | Tabel | Isi |
 |---|---|
 | `users` | Akun tunggal untuk tiga peran (`admin`, `company`, `seeker`) |
+| `majors` | Kompetensi keahlian (jurusan) — data induk laporan serapan |
 | `companies` | Profil perusahaan + status verifikasi |
-| `seekers` | Profil pencari kerja, CV, keahlian |
-| `jobs` | Lowongan beserta status moderasi & statistik tayangan |
+| `seekers` | Profil pencari kerja, CV, keahlian, `major_id` → `majors` |
+| `jobs` | Lowongan, status moderasi, statistik tayangan, `major_id` → `majors` |
 | `applications` | Lamaran, status seleksi, catatan, jadwal wawancara |
 | `saved_jobs` | Lowongan yang ditandai pencari kerja |
 | `announcements` | Pengumuman BKK di beranda |
@@ -231,6 +237,25 @@ sesuaikan dengan jurusan yang benar-benar dibuka sekolah.
 
 Skema dibuat otomatis saat aplikasi dijalankan (`Base.metadata.create_all`).
 Alembic sudah terpasang pada `requirements.txt` bila kelak diperlukan migrasi bertahap.
+
+### Mengapa jurusan berupa tabel, bukan teks
+
+Laporan serapan dikelompokkan per jurusan. Bila jurusan disimpan sebagai teks bebas,
+"TKJ" dan "Teknik Komputer dan Jaringan" akan terhitung sebagai dua baris berbeda dan
+angkanya tidak bisa dipercaya. Karena itu jurusan berupa tabel `majors` dan
+`seekers`/`jobs` menunjuk kepadanya lewat kunci asing.
+
+**Basis data yang sudah berisi data** (dari versi sebelum tabel ini ada) dipindahkan
+dengan skrip khusus — `create_all` hanya membuat tabel baru, tidak menambah kolom:
+
+```bash
+python scripts/migrate_jurusan.py            # pratinjau, tidak menulis apa pun
+python scripts/migrate_jurusan.py --terapkan # jalankan
+```
+
+Skrip memetakan nilai teks lama ke baris `majors`, mempertahankan nama jurusan di luar
+daftar baku, lalu menghapus kolom lama. Aman dijalankan berulang, dan menolak menghapus
+kolom lama bila masih ada baris yang tidak terpetakan.
 
 ---
 
@@ -250,14 +275,18 @@ Alembic sudah terpasang pada `requirements.txt` bila kelak diperlukan migrasi be
 `/perusahaan/pelamar/{id}`
 
 **Admin** — `/admin` · `/admin/perusahaan` · `/admin/lowongan` · `/admin/lamaran` ·
-`/admin/pengguna` · `/admin/laporan` · `/admin/laporan/ekspor` · `/admin/pengumuman` · `/admin/log`
+`/admin/pengguna` · `/admin/jurusan` · `/admin/laporan` · `/admin/laporan/ekspor` ·
+`/admin/pengumuman` · `/admin/log`
+
+`/admin/laporan?lulus=2025` menyaring serapan per angkatan;
+`/admin/laporan/ekspor?jenis=serapan&lulus=2025` mengunduhnya sebagai CSV.
 
 ---
 
 ## Pengujian
 
 ```bash
-make test          # 52 pemeriksaan: rute publik, ketiga peran, penjaga akses, validasi formulir
+make test          # 65 pemeriksaan: rute publik, ketiga peran, penjaga akses, validasi formulir
 node --check docs/assets/demo-app.js   # sintaks demo statis
 ```
 

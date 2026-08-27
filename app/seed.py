@@ -19,10 +19,11 @@ from app.models import (
     ApplicationStatus,
     Company,
     CompanyStatus,
+    DEFAULT_MAJORS,
     EmploymentType,
     Job,
     JobStatus,
-    MAJORS,
+    Major,
     Role,
     SavedJob,
     Seeker,
@@ -181,6 +182,21 @@ def seed() -> None:
         db.flush()
         print(f"  ✓ Admin: {admin.email} / {settings.admin_password}")
 
+        # ── Kompetensi keahlian ────────────────────────────────────────────
+        majors: dict[str, Major] = {}
+        for urutan, (kode, nama_jurusan) in enumerate(DEFAULT_MAJORS):
+            major = Major(
+                code=kode,
+                name=nama_jurusan,
+                slug=slugify(nama_jurusan),
+                sort_order=urutan,
+                is_active=True,
+            )
+            db.add(major)
+            majors[nama_jurusan] = major
+        db.flush()
+        print(f"  ✓ {len(majors)} kompetensi keahlian")
+
         # ── Perusahaan ─────────────────────────────────────────────────────
         companies: dict[str, Company] = {}
         for i, (nama, bidang, kota, karyawan, deskripsi) in enumerate(PERUSAHAAN):
@@ -234,7 +250,7 @@ def seed() -> None:
                 description=desk,
                 requirements=syarat,
                 benefits=benefit,
-                major_target=jurusan,
+                major_id=majors[jurusan].id if jurusan else None,
                 employment_type=tipe,
                 location=lokasi,
                 is_remote=tipe in (EmploymentType.PART_TIME,) and "Digital" in nama_pt,
@@ -258,7 +274,7 @@ def seed() -> None:
         # ── Pencari kerja ──────────────────────────────────────────────────
         seekers: list[Seeker] = []
         for i, (nama, gender) in enumerate(NAMA_PELAMAR):
-            jurusan = MAJORS[i % (len(MAJORS) - 1)]
+            jurusan = DEFAULT_MAJORS[i % (len(DEFAULT_MAJORS) - 1)][1]
             tahun_lulus = random.choice([2023, 2024, 2025, 2026])
             user = User(
                 email=f"{slugify(nama).replace('-', '.')}@gmail.com",
@@ -279,7 +295,7 @@ def seed() -> None:
                 birth_date=date(2006 - (2026 - tahun_lulus), random.randint(1, 12), random.randint(1, 28)),
                 address=f"Desa {random.choice(['Margorejo','Sukoharjo','Tambaharjo','Gembong','Winong'])}, Kabupaten Pati",
                 city="Pati",
-                major=jurusan,
+                major_id=majors[jurusan].id,
                 graduation_year=tahun_lulus,
                 headline=f"Lulusan {jurusan} — siap kerja dan cepat beradaptasi",
                 summary=(
@@ -311,7 +327,7 @@ def seed() -> None:
         )
         jumlah = 0
         for seeker in seekers:
-            cocok = [j for j in published if j.major_target == seeker.major] or published
+            cocok = [j for j in published if j.major_id == seeker.major_id] or published
             for job in random.sample(cocok, k=min(len(cocok), random.randint(1, 3))):
                 if db.query(Application).filter(
                     Application.job_id == job.id, Application.seeker_id == seeker.id
@@ -325,7 +341,7 @@ def seed() -> None:
                         seeker_id=seeker.id,
                         cover_letter=(
                             f"Dengan hormat, saya {seeker.user.full_name}, alumni {settings.school_name} "
-                            f"program keahlian {seeker.major}. Saya tertarik melamar posisi {job.title} "
+                            f"program keahlian {seeker.major.name}. Saya tertarik melamar posisi {job.title} "
                             f"di {job.company.name} karena sesuai dengan kompetensi yang saya pelajari. "
                             "Besar harapan saya dapat mengikuti proses seleksi berikutnya."
                         ),

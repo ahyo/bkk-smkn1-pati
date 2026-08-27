@@ -6,10 +6,12 @@
 <div class="page-head">
   <div><h1>Laporan &amp; Rekap Penyaluran</h1><p>Bahan pelaporan BKK ke sekolah dan dinas terkait.</p></div>
   <div class="btn-group">
+    <a href="/admin/laporan/ekspor?jenis=serapan{{ '&lulus=' ~ tahun_lulus if tahun_lulus }}"
+       class="btn btn-primary">{{ icon('download') }} Serapan</a>
     <a href="/admin/laporan/ekspor?jenis=lamaran" class="btn btn-outline">{{ icon('download') }} Lamaran</a>
     <a href="/admin/laporan/ekspor?jenis=lowongan" class="btn btn-outline">{{ icon('download') }} Lowongan</a>
     <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">{{ icon('download') }} Perusahaan</a>
-    <button class="btn btn-primary" onclick="window.print()">{{ icon('printer') }} Cetak</button>
+    <button class="btn btn-outline" onclick="window.print()">{{ icon('printer') }} Cetak</button>
   </div>
 </div>
 
@@ -37,33 +39,121 @@
   </div>
 </div>
 
-<div class="grid grid-2">
-  <div class="card">
-    <div class="card-head"><h2>Rekap per kompetensi keahlian</h2></div>
+<section class="card mb-3">
+  <div class="card-head">
+    <div>
+      <h2>Serapan kerja per kompetensi keahlian</h2>
+      <p class="muted small mb-0">
+        Terserap = jumlah alumni berbeda yang punya minimal satu lamaran diterima.
+        Satu alumnus yang diterima di dua perusahaan tetap dihitung satu orang.
+      </p>
+    </div>
+    <form method="get" class="flex gap-sm items-center">
+      <input type="hidden" name="tahun" value="{{ tahun }}">
+      <label class="label mb-0" for="lulus">Tahun lulus</label>
+      <select name="lulus" id="lulus" data-autosubmit style="width:auto">
+        <option value="">Semua angkatan</option>
+        {% for t in lulus_tersedia %}
+          <option value="{{ t }}" {{ 'selected' if t == tahun_lulus }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <div class="card-body">
+    <div class="grid grid-4 mb-3">
+      <div class="stat">
+        <div class="label">Alumni terdaftar</div>
+        <div class="value">{{ total_serapan.alumni }}</div>
+        <div class="hint">{{ 'angkatan ' ~ tahun_lulus if tahun_lulus else 'semua angkatan' }}</div>
+      </div>
+      <div class="stat">
+        <div class="label">Sudah melamar</div>
+        <div class="value">{{ total_serapan.melamar }}</div>
+        <div class="hint">{{ total_serapan.lamaran }} lamaran terkirim</div>
+      </div>
+      <div class="stat ok">
+        <div class="label">Terserap kerja</div>
+        <div class="value">{{ total_serapan.terserap }}</div>
+        <div class="hint">diterima minimal satu perusahaan</div>
+      </div>
+      <div class="stat accent">
+        <div class="label">Tingkat serapan</div>
+        <div class="value">{{ total_serapan.persen }}%</div>
+        <div class="hint">terhadap alumni terdaftar</div>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table class="data">
-        <thead><tr><th>Kompetensi Keahlian</th><th class="right">Pelamar</th><th class="right">Lamaran</th><th class="right">Diterima</th><th class="right">%</th></tr></thead>
-        <tbody>
-          {% for major, pelamar, lamaran, diterima in per_jurusan %}
+        <thead>
           <tr>
-            <td class="cell-main">{{ major or 'Belum diisi' }}</td>
-            <td class="right">{{ pelamar }}</td>
-            <td class="right">{{ lamaran }}</td>
-            <td class="right">{{ diterima or 0 }}</td>
-            <td class="right">
-              <span class="badge {{ 'ok' if lamaran and (diterima or 0) / lamaran > 0.2 else 'muted' }}">
-                {{ ((diterima or 0) / lamaran * 100) | round(1) if lamaran else 0 }}%
-              </span>
+            <th style="min-width:250px">Kompetensi Keahlian</th>
+            <th class="right">Alumni</th>
+            <th class="right">Melamar</th>
+            <th class="right">Lamaran</th>
+            <th class="right">Terserap</th>
+            <th style="min-width:190px">Tingkat serapan</th>
+            <th class="right">Lowongan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in per_jurusan %}
+          <tr>
+            <td>
+              <div class="cell-main flex items-center gap-sm">
+                <span class="badge muted">{{ r.code }}</span>
+                <span>{{ r.name }}</span>
+                {% if not r.is_active %}<span class="badge muted">nonaktif</span>{% endif %}
+              </div>
             </td>
+            <td class="right">{{ r.alumni }}</td>
+            <td class="right">{{ r.melamar }}</td>
+            <td class="right">{{ r.lamaran }}</td>
+            <td class="right strong">{{ r.terserap }}</td>
+            <td>
+              {% if r.alumni %}
+                <div class="flex between items-center gap-sm mb-1">
+                  <span class="badge {{ 'ok' if r.persen >= 60 else ('warn' if r.persen >= 30 else 'muted') }}">
+                    {{ r.persen }}%
+                  </span>
+                  <small class="muted">{{ r.terserap }} dari {{ r.alumni }}</small>
+                </div>
+                <div class="track" style="height:8px;background:var(--line);border-radius:99px;overflow:hidden">
+                  <i style="display:block;height:100%;border-radius:99px;width:{{ r.persen }}%;
+                            background:{{ 'var(--ok-500)' if r.persen >= 60 else ('var(--warn-500)' if r.persen >= 30 else 'var(--line-2)') }}"></i>
+                </div>
+              {% else %}
+                <span class="muted small">Belum ada alumni terdaftar</span>
+              {% endif %}
+            </td>
+            <td class="right">{{ r.lowongan }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="center muted">Belum ada data.</td></tr>
+          <tr><td colspan="7" class="center muted">
+            Belum ada jurusan. <a href="/admin/jurusan">Tambahkan kompetensi keahlian</a> terlebih dahulu.
+          </td></tr>
           {% endfor %}
         </tbody>
+        {% if per_jurusan %}
+        <tfoot>
+          <tr style="background:var(--surface-2);font-weight:650">
+            <td>Total</td>
+            <td class="right">{{ total_serapan.alumni }}</td>
+            <td class="right">{{ total_serapan.melamar }}</td>
+            <td class="right">{{ total_serapan.lamaran }}</td>
+            <td class="right">{{ total_serapan.terserap }}</td>
+            <td><span class="badge {{ 'ok' if total_serapan.persen >= 60 else 'warn' }}">{{ total_serapan.persen }}%</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+        {% endif %}
       </table>
     </div>
   </div>
+</section>
 
+<div class="grid">
   <div class="card">
     <div class="card-head"><h2>Perusahaan paling aktif</h2></div>
     <div class="table-wrap">

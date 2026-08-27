@@ -41,7 +41,7 @@
         <tr>
           <td>
             <div class="cell-main"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
-            <div class="cell-sub">{{ icon('pin') }} {{ j.location }} · {{ icon('cap') }} {{ j.major_target or 'Umum' }} · {{ icon('eye') }} {{ j.views or 0 }}</div>
+            <div class="cell-sub">{{ icon('pin') }} {{ j.location }} · {{ icon('cap') }} {{ j.major.name if j.major else 'Semua jurusan' }} · {{ icon('eye') }} {{ j.views or 0 }}</div>
             {% if j.review_note %}<div class="cell-sub" style="color:var(--danger-700)">{{ icon('message') }} {{ j.review_note }}</div>{% endif %}
           </td>
           <td class="cell-sub nowrap">{{ j.employment_type | label_kerja }}</td>

@@ -50,14 +50,14 @@
         </span>
         <div style="min-width:0;flex:1">
           <h3 class="truncate" style="margin:0">{{ a.seeker.user.full_name }}</h3>
-          <div class="cell-sub truncate">{{ a.seeker.headline or (a.seeker.major or 'Pencari kerja') }}</div>
+          <div class="cell-sub truncate">{{ a.seeker.headline or (a.seeker.major.name if a.seeker.major else 'Pencari kerja') }}</div>
           <span class="badge {{ a.status | badge_lamaran }} mt-1">{{ a.status | label_status_lamaran }}</span>
         </div>
       </div>
 
       <div class="job-meta">
         <span>{{ icon('clipboard') }} {{ a.job.title }}</span>
-        <span>{{ icon('cap') }} {{ a.seeker.major or '-' }}</span>
+        <span>{{ icon('cap') }} {{ a.seeker.major.name if a.seeker.major else '-' }}</span>
         {% if a.seeker.graduation_year %}<span>{{ icon('calendar') }} Lulus {{ a.seeker.graduation_year }}</span>{% endif %}
         {% if a.seeker.city %}<span>{{ icon('pin') }} {{ a.seeker.city }}</span>{% endif %}
       </div>

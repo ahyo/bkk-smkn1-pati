@@ -23,7 +23,7 @@ from app.models import (
 )
 from app.routers.auth import log_activity
 from app.templating import render
-from app.utils import ALLOWED_IMG, flash, paginate, save_upload, unique_slug
+from app.utils import ALLOWED_IMG, daftar_jurusan, flash, paginate, save_upload, unique_slug
 
 router = APIRouter(prefix="/perusahaan", tags=["perusahaan"], dependencies=[Depends(company_required)])
 
@@ -184,11 +184,16 @@ async def daftar_lowongan(
 
 
 @router.get("/lowongan/baru")
-async def form_lowongan_baru(request: Request, company: Company = Depends(current_company)):
+async def form_lowongan_baru(
+    request: Request, db: Session = Depends(get_db), company: Company = Depends(current_company)
+):
     if settings.require_company_verification and not company.is_verified:
         flash(request, "Akun perusahaan Anda belum terverifikasi admin BKK.", "warning")
         return redirect("/perusahaan")
-    return render(request, "company/job_form.html", {"job": None, "company": company})
+    return render(
+        request, "company/job_form.html",
+        {"job": None, "company": company, "majors": daftar_jurusan(db)},
+    )
 
 
 @router.get("/lowongan/{job_id}/ubah")
@@ -198,7 +203,10 @@ async def form_lowongan_ubah(
     job = db.get(Job, job_id)
     if not job or job.company_id != company.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Lowongan tidak ditemukan.")
-    return render(request, "company/job_form.html", {"job": job, "company": company})
+    return render(
+        request, "company/job_form.html",
+        {"job": job, "company": company, "majors": daftar_jurusan(db)},
+    )
 
 
 @router.post("/lowongan/simpan")
@@ -212,7 +220,7 @@ async def simpan_lowongan(
     description: str = Form(...),
     requirements: str = Form(""),
     benefits: str = Form(""),
-    major_target: str = Form(""),
+    major_id: str = Form(""),
     employment_type: str = Form("full_time"),
     location: str = Form(...),
     is_remote: str = Form(""),
@@ -244,7 +252,7 @@ async def simpan_lowongan(
     job.description = description.strip()
     job.requirements = requirements.strip() or None
     job.benefits = benefits.strip() or None
-    job.major_target = major_target or None
+    job.major_id = int(major_id) if major_id.isdigit() else None
     try:
         job.employment_type = EmploymentType(employment_type)
     except ValueError:
@@ -349,7 +357,7 @@ async def daftar_pelamar(
             pass
     if q:
         like = f"%{q.strip()}%"
-        query = query.filter(or_(User.full_name.ilike(like), Seeker.major.ilike(like), Seeker.skills.ilike(like)))
+        query = query.filter(or_(User.full_name.ilike(like), Seeker.skills.ilike(like)))
 
     query = query.order_by(Application.created_at.desc())
     apps, meta = paginate(query, page, per_page=12)

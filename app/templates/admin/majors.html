@@ -1,0 +1,154 @@
+{% extends "layout/dashboard.html" %}
+{% block title %}Kompetensi Keahlian{% endblock %}
+{% block sidebar %}{% include "partials/nav_admin.html" %}{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <div>
+    <h1>Kompetensi Keahlian</h1>
+    <p>Data induk jurusan. Dipakai pada profil pencari kerja, target lowongan,
+       dan laporan serapan kerja.</p>
+  </div>
+  <a href="/admin/laporan" class="btn btn-outline">{{ icon('chart') }} Laporan Serapan</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-head">
+      <h2>Daftar jurusan</h2>
+      <span class="muted small">{{ majors | length }} jurusan</span>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Kode</th><th style="min-width:200px">Nama</th>
+            <th>Dipakai</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in majors %}
+          <tr>
+            <td><span class="badge muted">{{ m.code }}</span></td>
+            <td>
+              <div class="cell-main">{{ m.name }}</div>
+              {% if m.description %}<div class="cell-sub">{{ m.description }}</div>{% endif %}
+            </td>
+            <td class="nowrap cell-sub">
+              {{ dipakai_seeker.get(m.id, 0) }} alumni<br>
+              {{ dipakai_job.get(m.id, 0) }} lowongan
+            </td>
+            <td>
+              <span class="badge {{ 'ok' if m.is_active else 'muted' }}">
+                {{ 'Aktif' if m.is_active else 'Nonaktif' }}
+              </span>
+            </td>
+            <td>
+              <div class="cell-actions">
+                <button class="btn btn-outline btn-sm" type="button" title="Ubah jurusan"
+                        data-edit-jurusan
+                        data-id="{{ m.id }}" data-code="{{ m.code }}" data-name="{{ m.name }}"
+                        data-description="{{ m.description or '' }}" data-sort="{{ m.sort_order }}"
+                        data-active="{{ 1 if m.is_active else 0 }}">{{ icon('edit', 'xs') }} Ubah</button>
+                <form method="post" action="/admin/jurusan/{{ m.id }}/aktif">
+                  <button class="btn btn-ghost btn-sm" type="submit"
+                          title="{{ 'Sembunyikan dari formulir baru' if m.is_active else 'Tampilkan kembali' }}">
+                    {{ 'Nonaktifkan' if m.is_active else 'Aktifkan' }}
+                  </button>
+                </form>
+                {% if not dipakai_seeker.get(m.id, 0) and not dipakai_job.get(m.id, 0) %}
+                <form method="post" action="/admin/jurusan/{{ m.id }}/hapus"
+                      data-confirm="Hapus jurusan {{ m.name }}?">
+                  <button class="btn btn-ghost btn-sm" type="submit">{{ icon('trash', 'xs') }}</button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">{% include "partials/empty.html" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-foot small muted">
+      Jurusan yang sudah terpakai tidak bisa dihapus — nonaktifkan saja supaya hilang dari
+      formulir baru sementara riwayat laporannya tetap utuh.
+    </div>
+  </div>
+
+  <div class="card" id="form-jurusan">
+    <div class="card-head"><h2 id="judul-form">Tambah jurusan</h2></div>
+    <form method="post" action="/admin/jurusan" class="card-body">
+      <input type="hidden" name="major_id" id="f-id" value="">
+      <div class="form-row-3">
+        <div class="field">
+          <label for="f-code">Kode <span class="req">*</span></label>
+          <input type="text" id="f-code" name="code" maxlength="12" required placeholder="TKJ">
+          <div class="help">Singkatan resmi, mis. AKL, RPL, TKJ.</div>
+        </div>
+        <div class="field" style="grid-column:span 2">
+          <label for="f-name">Nama jurusan <span class="req">*</span></label>
+          <input type="text" id="f-name" name="name" maxlength="120" required
+                 placeholder="Teknik Komputer dan Jaringan">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="f-desc">Keterangan</label>
+          <textarea id="f-desc" name="description" rows="2"
+                    placeholder="Ringkasan bidang kerja lulusan jurusan ini."></textarea>
+        </div>
+        <div class="field">
+          <label for="f-sort">Urutan tampil</label>
+          <input type="number" id="f-sort" name="sort_order" value="0">
+          <div class="help">Angka lebih kecil tampil lebih dulu pada dropdown.</div>
+        </div>
+      </div>
+      <label class="check mb-2">
+        <input type="checkbox" name="is_active" id="f-active" value="1" checked>
+        <span>Aktif — tampil pada formulir pendaftaran dan lowongan</span>
+      </label>
+      <div class="btn-group">
+        <button class="btn btn-primary" type="submit">{{ icon('save') }} Simpan</button>
+        <button class="btn btn-ghost" type="button" id="batal-edit" hidden>Batal</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById("form-jurusan");
+  var judul = document.getElementById("judul-form");
+  var batal = document.getElementById("batal-edit");
+  var f = {
+    id: document.getElementById("f-id"), code: document.getElementById("f-code"),
+    name: document.getElementById("f-name"), desc: document.getElementById("f-desc"),
+    sort: document.getElementById("f-sort"), active: document.getElementById("f-active")
+  };
+
+  document.querySelectorAll("[data-edit-jurusan]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      f.id.value = btn.dataset.id;
+      f.code.value = btn.dataset.code;
+      f.name.value = btn.dataset.name;
+      f.desc.value = btn.dataset.description;
+      f.sort.value = btn.dataset.sort;
+      f.active.checked = btn.dataset.active === "1";
+      judul.textContent = "Ubah " + btn.dataset.name;
+      batal.hidden = false;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      f.code.focus();
+    });
+  });
+
+  batal.addEventListener("click", function () {
+    f.id.value = ""; f.code.value = ""; f.name.value = "";
+    f.desc.value = ""; f.sort.value = "0"; f.active.checked = true;
+    judul.textContent = "Tambah jurusan";
+    batal.hidden = true;
+  });
+})();
+</script>
+{% endblock %}
