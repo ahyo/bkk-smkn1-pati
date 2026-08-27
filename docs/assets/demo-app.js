@@ -90,6 +90,11 @@
   function mySeeker() { var u = user(); return u && u.seekerId ? seeker(u.seekerId) : null; }
   function seekerUser(sid) { return DB.users.find(function (u) { return u.seekerId === sid; }); }
   function job(id) { return DB.jobs.find(function (j) { return j.id === id; }); }
+  function slug(teks) {
+    return String(teks || "").toLowerCase()
+      .replace(/[^\w\s-]/g, "").trim()
+      .replace(/[-\s]+/g, "-") || "item";
+  }
   function jobBySlug(slug) { return DB.jobs.find(function (j) { return j.slug === slug; }); }
   function appsOfJob(id) { return DB.applications.filter(function (a) { return a.jobId === id; }); }
   function publicJobs() {
@@ -495,6 +500,125 @@
       }).join("") + '</ul></div></div>';
   }
 
+  // ── Pendaftaran (simulasi) ───────────────────────────────────────────────
+  function pageDaftar() {
+    return '<div class="center mb-3"><span class="eyebrow-dark">Pendaftaran</span>' +
+      '<h1>Daftar sebagai apa?</h1>' +
+      '<p class="muted">Pilih jenis akun sesuai kebutuhan Anda. ' +
+      'Di demo ini akun tersimpan pada peramban Anda sendiri.</p></div>' +
+      '<div class="role-cards">' +
+      '<div class="role-card"><div class="ico">' + ICON('cap', '3xl') + '</div>' +
+      '<h2>Pencari Kerja</h2>' +
+      '<p class="muted small">Alumni dan siswa tingkat akhir ' + SEKOLAH + '.</p>' +
+      '<ul><li>Lamar lowongan mitra terverifikasi</li>' +
+      '<li>Simpan lowongan yang diminati</li>' +
+      '<li>Pantau status seleksi tiap lamaran</li>' +
+      '<li>Kelola profil dan CV daring</li></ul>' +
+      '<a href="#/daftar/pencari-kerja" class="btn btn-primary btn-block">Daftar Pencari Kerja</a></div>' +
+      '<div class="role-card"><div class="ico">' + ICON('building', '3xl') + '</div>' +
+      '<h2>Perusahaan (DUDI)</h2>' +
+      '<p class="muted small">Mitra dunia usaha dan dunia industri.</p>' +
+      '<ul><li>Pasang lowongan setelah terverifikasi</li>' +
+      '<li>Seleksi pelamar langsung dari dashboard</li>' +
+      '<li>Jadwalkan wawancara dan catat hasilnya</li>' +
+      '<li>Terhubung dengan lulusan sesuai jurusan</li></ul>' +
+      '<a href="#/daftar/perusahaan" class="btn btn-dark btn-block">Daftar Perusahaan</a></div>' +
+      '</div>' +
+      '<p class="center muted small mt-3">Sudah punya akun? <a href="#/masuk">Masuk di sini</a>.</p>';
+  }
+
+  function catatanDemo(teks) {
+    return '<div class="alert alert-info mb-2"><span>' + ICON('info', 'md') + '</span>' +
+      '<span>' + teks + '</span></div>';
+  }
+
+  function pageDaftarPelamar() {
+    return '<div style="max-width:620px;margin:0 auto">' +
+      '<div class="breadcrumb"><a href="#/daftar">Daftar</a> › Pencari Kerja</div>' +
+      '<h1>Daftar Pencari Kerja</h1>' +
+      '<p class="muted">Lengkapi data diri untuk mulai melamar lowongan.</p>' +
+      catatanDemo('<b>Simulasi.</b> Akun dibuat sungguhan di dalam demo ini dan langsung bisa ' +
+        'dipakai melamar, tetapi hanya tersimpan di peramban Anda.') +
+      '<div class="card"><form class="card-body" data-form="daftar-pelamar">' +
+      '<fieldset><legend>Data diri</legend>' +
+      '<div class="field"><label>Nama lengkap <span class="req">*</span></label>' +
+      '<input type="text" name="nama" required placeholder="Sesuai ijazah"></div>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Email <span class="req">*</span></label>' +
+      '<input type="email" name="email" required placeholder="nama@email.com"></div>' +
+      '<div class="field"><label>Nomor WhatsApp</label>' +
+      '<input type="tel" name="phone" placeholder="08xxxxxxxxxx"></div></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>Data sekolah</legend>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>NIS / NISN</label><input type="text" name="nis"></div>' +
+      '<div class="field"><label>Tahun lulus</label>' +
+      '<input type="number" name="grad" min="2000" max="2100" placeholder="2026"></div></div>' +
+      '<div class="field"><label>Kompetensi keahlian</label><select name="majorId">' +
+      '<option value="">— pilih jurusan —</option>' +
+      activeMajors().map(function (m) {
+        return '<option value="' + m.id + '">' + esc(m.code) + ' — ' + esc(m.name) + '</option>';
+      }).join("") + '</select>' +
+      '<div class="help">Dipakai untuk merekomendasikan lowongan dan menghitung serapan kerja.</div></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>Keamanan akun</legend>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Kata sandi <span class="req">*</span></label>' +
+      '<input type="password" name="pw" required>' +
+      '<div class="help">Minimal 8 karakter, memuat huruf dan angka.</div></div>' +
+      '<div class="field"><label>Ulangi kata sandi <span class="req">*</span></label>' +
+      '<input type="password" name="pw2" required></div></div>' +
+      '</fieldset>' +
+      '<label class="check mb-2"><input type="checkbox" name="setuju" value="1">' +
+      '<span>Saya menyetujui ketentuan penggunaan portal BKK ' + SEKOLAH + '.</span></label>' +
+      '<button class="btn btn-primary btn-block btn-lg" type="submit">Buat Akun</button>' +
+      '<p class="center muted small mt-2 mb-0">Sudah punya akun? <a href="#/masuk">Masuk</a></p>' +
+      '</form></div></div>';
+  }
+
+  function pageDaftarPerusahaan() {
+    return '<div style="max-width:620px;margin:0 auto">' +
+      '<div class="breadcrumb"><a href="#/daftar">Daftar</a> › Perusahaan</div>' +
+      '<h1>Daftar Perusahaan Mitra</h1>' +
+      '<p class="muted">Akun ditinjau admin BKK sebelum dapat memasang lowongan.</p>' +
+      catatanDemo('<b>Simulasi.</b> Setelah mendaftar, akun berstatus <b>menunggu verifikasi</b>. ' +
+        'Masuk sebagai Admin lewat bilah atas untuk menyetujuinya, lalu kembali sebagai perusahaan ' +
+        'untuk memasang lowongan.') +
+      '<div class="card"><form class="card-body" data-form="daftar-perusahaan">' +
+      '<fieldset><legend>Identitas perusahaan</legend>' +
+      '<div class="field"><label>Nama perusahaan <span class="req">*</span></label>' +
+      '<input type="text" name="nama" required placeholder="PT / CV / UD ..."></div>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Bidang usaha</label>' +
+      '<input type="text" name="industry" placeholder="Manufaktur, Retail, Teknologi ..."></div>' +
+      '<div class="field"><label>Kota</label><input type="text" name="city" placeholder="Pati"></div></div>' +
+      '<div class="field"><label>Alamat</label><textarea name="address" rows="2"></textarea></div>' +
+      '<div class="field"><label>Situs web</label>' +
+      '<input type="url" name="website" placeholder="https://"></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>Narahubung (PIC)</legend>' +
+      '<div class="field"><label>Nama narahubung <span class="req">*</span></label>' +
+      '<input type="text" name="pic" required></div>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Email <span class="req">*</span></label>' +
+      '<input type="email" name="email" required></div>' +
+      '<div class="field"><label>Telepon</label><input type="tel" name="phone"></div></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>Keamanan akun</legend>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Kata sandi <span class="req">*</span></label>' +
+      '<input type="password" name="pw" required>' +
+      '<div class="help">Minimal 8 karakter, memuat huruf dan angka.</div></div>' +
+      '<div class="field"><label>Ulangi kata sandi <span class="req">*</span></label>' +
+      '<input type="password" name="pw2" required></div></div>' +
+      '</fieldset>' +
+      '<label class="check mb-2"><input type="checkbox" name="setuju" value="1">' +
+      '<span>Kami menyetujui ketentuan kerja sama BKK ' + SEKOLAH + '.</span></label>' +
+      '<button class="btn btn-dark btn-block btn-lg" type="submit">Ajukan Pendaftaran</button>' +
+      '<p class="center muted small mt-2 mb-0">Sudah punya akun? <a href="#/masuk">Masuk</a></p>' +
+      '</form></div></div>';
+  }
+
   function pageMasuk() {
     var akun = [
       { id: 1, ico: "shield", label: "Admin BKK", desc: "Verifikasi mitra, moderasi lowongan, dan rekap penyaluran.", email: "admin@bkksmkn1pati.sch.id" },
@@ -511,6 +635,9 @@
           '<p class="tiny muted"><code>' + esc(a.email) + '</code></p>' +
           '<button class="btn btn-primary btn-block" data-action="login" data-id="' + a.id + '">Masuk sebagai ' + esc(a.label) + '</button></div>';
       }).join("") + '</div>' +
+      '<p class="center muted mt-3">Belum punya akun? ' +
+      '<a href="#/daftar/pencari-kerja">Daftar sebagai pencari kerja</a> atau ' +
+      '<a href="#/daftar/perusahaan">daftarkan perusahaan Anda</a>.</p>' +
       '<div class="card mt-4" style="max-width:820px;margin:2rem auto 0"><div class="card-body">' +
       '<h3>Catatan untuk peninjau</h3><p class="small muted mb-0">Pada aplikasi produksi (FastAPI + PostgreSQL), halaman ini ' +
       'berupa formulir email dan kata sandi dengan hash bcrypt, sesi cookie tertandatangani, serta pembatasan akses per peran. ' +
@@ -1337,7 +1464,8 @@
         '<span class="avatar" title="' + esc(nama) + '">' + esc(inisial(nama)) + '</span>' +
         '<button class="btn btn-ghost btn-sm" data-action="logout">Keluar</button>';
     } else {
-      akun = '<a href="#/masuk" class="btn btn-primary btn-sm">Masuk / Pilih Peran</a>';
+      akun = '<a href="#/masuk" class="btn btn-outline btn-sm">Masuk</a>' +
+        '<a href="#/daftar" class="btn btn-primary btn-sm">Daftar</a>';
     }
 
     return '<div class="topbar"><div class="container">' +
@@ -1373,6 +1501,8 @@
       '<p class="mt-2" style="max-width:34ch">Menjembatani lulusan ' + SEKOLAH + ' dengan dunia usaha dan dunia industri ' +
       'melalui informasi lowongan yang terverifikasi.</p></div>' +
       '<div><h4>Portal</h4><a href="#/lowongan">Cari Lowongan</a><a href="#/mitra">Perusahaan Mitra</a>' +
+      '<a href="#/daftar/pencari-kerja">Daftar Pencari Kerja</a>' +
+      '<a href="#/daftar/perusahaan">Daftar Perusahaan</a>' +
       '<a href="#/masuk">Masuk / Pilih Peran</a></div>' +
       '<div><h4>Informasi</h4><a href="#/tentang">Tentang BKK</a><a href="#/admin">Panel Admin</a>' +
       '<a href="#/perusahaan">Dashboard Perusahaan</a><a href="#/pelamar">Dashboard Pelamar</a></div>' +
@@ -1408,6 +1538,10 @@
         return path[1] ? { html: pageMitraDetail(path[1]) } : { html: pageMitra(qs) };
       case "tentang": return { html: pageTentang() };
       case "masuk": return { html: pageMasuk() };
+      case "daftar":
+        if (path[1] === "pencari-kerja") return { html: pageDaftarPelamar() };
+        if (path[1] === "perusahaan") return { html: pageDaftarPerusahaan() };
+        return { html: pageDaftar() };
       case "pelamar":
         if (!guard("seeker")) return { html: "" };
         if (path[1] === "lamaran") return { dash: "seeker", path: path, html: pageSeekerLamaran(qs) };
@@ -1592,6 +1726,63 @@
     var id = Number(form.getAttribute("data-id"));
     var d = new FormData(form);
     function val(k) { return (d.get(k) || "").toString().trim(); }
+
+    if (kind === "daftar-pelamar" || kind === "daftar-perusahaan") {
+      var perusahaan = kind === "daftar-perusahaan";
+      var email = val("email").toLowerCase();
+      var galat = [];
+
+      if (DB.users.some(function (u) { return u.email.toLowerCase() === email; })) {
+        galat.push("Email sudah terdaftar. Silakan masuk atau gunakan email lain.");
+      }
+      if (val("pw") !== val("pw2")) galat.push("Konfirmasi kata sandi tidak cocok.");
+      // Aturan sama dengan password_issues() di aplikasi.
+      var pw = val("pw");
+      if (pw.length < 8) galat.push("Kata sandi minimal 8 karakter.");
+      if (!/[A-Za-z]/.test(pw)) galat.push("Kata sandi harus memuat huruf.");
+      if (!/[0-9]/.test(pw)) galat.push("Kata sandi harus memuat angka.");
+      if (!d.get("setuju")) {
+        galat.push(perusahaan ? "Anda harus menyetujui ketentuan kerja sama BKK."
+                              : "Anda harus menyetujui ketentuan penggunaan portal.");
+      }
+      if (galat.length) { galat.forEach(function (g) { flash(g, "danger"); }); render(); return; }
+
+      var uid = Math.max.apply(null, DB.users.map(function (u) { return u.id; })) + 1;
+      var hariIni = new Date().toISOString().slice(0, 10);
+
+      if (perusahaan) {
+        var cid = Math.max.apply(null, DB.companies.map(function (c) { return c.id; })) + 1;
+        DB.companies.push({
+          id: cid, name: val("nama"), slug: slug(val("nama")),
+          industry: val("industry") || null, city: val("city") || null,
+          address: val("address") || null, website: val("website") || null,
+          pic: val("pic"), phone: val("phone") || null, employees: null, desc: null,
+          status: "pending", joined: hariIni
+        });
+        DB.users.push({ id: uid, email: email, name: val("pic"), role: "company",
+                        companyId: cid, active: true, joined: hariIni });
+        addLog("register_company", "Pendaftaran perusahaan " + val("nama"));
+        setSession(uid); save();
+        flash("Pendaftaran diterima. Akun menunggu verifikasi admin BKK sebelum dapat memposting lowongan.", "success");
+        go("#/perusahaan"); return;
+      }
+
+      var sid = Math.max.apply(null, DB.seekers.map(function (x) { return x.id; })) + 1;
+      DB.seekers.push({
+        id: sid, userId: uid, nis: val("nis") || null, phone: val("phone") || null,
+        gender: null, birth: null, city: null,
+        majorId: parseInt(val("majorId"), 10) || null,
+        grad: parseInt(val("grad"), 10) || null,
+        headline: null, summary: null, skills: "", education: null,
+        cv: false, photo: false, openToWork: true
+      });
+      DB.users.push({ id: uid, email: email, name: val("nama"), role: "seeker",
+                      seekerId: sid, active: true, joined: hariIni });
+      addLog("register_seeker", "Pendaftaran akun pencari kerja");
+      setSession(uid); save();
+      flash("Akun berhasil dibuat. Lengkapi profil Anda agar mudah dilirik perusahaan.", "success");
+      go("#/pelamar/profil"); return;
+    }
 
     if (kind === "cari-beranda" || kind === "filter-lowongan") {
       var p = new URLSearchParams();

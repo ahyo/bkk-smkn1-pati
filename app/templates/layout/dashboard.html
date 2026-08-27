@@ -3,7 +3,14 @@
 {% block content %}
 <div class="layout-side">
   <aside class="sidebar">
-    {% block sidebar %}{% endblock %}
+    {# Di layar sempit menu dilipat supaya isi halaman tidak terdorong jauh ke bawah. #}
+    <button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="menu-dashboard">
+      <span>{{ icon('settings', 'md') }} Menu Dashboard</span>
+      <span class="sidebar-caret">{{ icon('arrow-right', 'sm') }}</span>
+    </button>
+    <div class="sidebar-body" id="menu-dashboard">
+      {% block sidebar %}{% endblock %}
+    </div>
   </aside>
   <div>
     {% block main %}{% endblock %}

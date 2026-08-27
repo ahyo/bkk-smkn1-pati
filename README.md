@@ -173,6 +173,12 @@ ketiga dashboard tanpa memasang server.
 make demo               # http://localhost:8080
 ```
 
+Demo memuat **simulasi pendaftaran** untuk kedua peran (`#/daftar/pencari-kerja` dan
+`#/daftar/perusahaan`). Akun yang dibuat benar-benar tersimpan di dalam demo dan langsung
+dapat dipakai — pencari kerja bisa melamar, sedangkan perusahaan berstatus *menunggu
+verifikasi* sampai disetujui lewat panel admin. Validasinya sama dengan aplikasi
+(email ganda, kecocokan kata sandi, panjang minimal, dan persetujuan ketentuan).
+
 Mengaktifkan di GitHub:
 
 1. `git init && git add . && git commit -m "Sistem BKK SMK N 1 Pati"`
@@ -195,6 +201,27 @@ benar-benar sama dengan yang tayang di produksi. Gaya yang hanya relevan bagi de
 (bilah "Mode Demo", pengalih peran) tinggal di `docs/assets/demo.css` dan tidak
 pernah tertimpa. Struktur HTML serta nama kelas pada demo dibuat identik dengan
 template Jinja. Rincian ada pada [`docs/README.md`](docs/README.md).
+
+---
+
+## Tampilan mobile
+
+Seluruh halaman — publik maupun ketiga dashboard — diaudit pada lebar **320px, 360px,
+dan 390px** dan tidak ada yang meluber ke samping. Beberapa keputusan yang membuatnya
+bertahan:
+
+- Semua kolom grid memakai `minmax(0,1fr)`, bukan `1fr`. Tanpa itu satu tabel lebar
+  memaksa seluruh grid melewati lebar layar, dan kolom di sebelahnya ikut terdorong keluar.
+- Tabel data bergulir mendatar di dalam wadahnya sendiri (`.table-wrap`), bukan
+  melebarkan halaman.
+- Grafik lamaran per bulan bergulir mendatar di layar sempit agar label bulannya tetap
+  terbaca, bukan dipadatkan sampai tak terbaca.
+- Menu dashboard dilipat menjadi tombol **Menu Dashboard** di bawah 1024px, supaya isi
+  halaman tidak terdorong turun oleh sembilan tautan navigasi.
+
+Audit dijalankan dengan Chrome headless memakai iframe selebar viewport target — Chrome
+memaksa lebar jendela minimum 500px, sehingga mengukur langsung dengan `--window-size`
+tidak pernah benar-benar menguji lebar ponsel.
 
 ---
 

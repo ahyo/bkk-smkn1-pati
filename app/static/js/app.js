@@ -28,6 +28,16 @@
     });
   });
 
+  // Menu dashboard yang dapat dilipat di layar sempit
+  var sideToggle = document.querySelector(".sidebar-toggle");
+  if (sideToggle) {
+    sideToggle.addEventListener("click", function () {
+      var side = sideToggle.closest(".sidebar");
+      var buka = side.classList.toggle("open");
+      sideToggle.setAttribute("aria-expanded", buka ? "true" : "false");
+    });
+  }
+
   // Konfirmasi aksi destruktif
   document.querySelectorAll("[data-confirm]").forEach(function (el) {
     el.addEventListener("submit", function (e) {
