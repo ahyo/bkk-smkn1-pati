@@ -87,7 +87,10 @@ bkk-smk1-pati/
 │       ├── js/app.js      # Interaksi ringan
 │       └── uploads/       # CV, logo, foto (cv/ logo/ photo/)
 ├── docs/                  # Demo statis untuk GitHub Pages
-├── scripts/smoke_test.py  # Uji asap 52 pemeriksaan
+│   └── assets/demo.css    # Gaya khusus demo (tidak pernah tertimpa)
+├── scripts/
+│   ├── smoke_test.py      # Uji asap 52 pemeriksaan
+│   └── build_demo_assets.py  # Sinkronkan CSS + ikon ke docs/
 ├── .github/workflows/     # CI + deploy GitHub Pages
 ├── docker-compose.yml     # PostgreSQL + aplikasi
 └── Makefile               # Perintah pintas
@@ -174,11 +177,19 @@ Mengaktifkan di GitHub:
 Alur kerja `.github/workflows/pages.yml` akan memeriksa berkas demo lalu menerbitkannya
 setiap kali direktori `docs/` berubah.
 
-**Alur penyesuaian sebelum produksi:** perbaiki tampilan di `docs/`, tinjau bersama sekolah,
-lalu salin `docs/assets/style.css` kembali ke `app/static/css/style.css`
-(hapus blok "Tambahan khusus demo" di bagian akhir). Struktur HTML dan nama kelas CSS
-pada demo dibuat identik dengan template Jinja agar pemindahan mudah dilakukan.
-Rincian ada pada [`docs/README.md`](docs/README.md).
+**Alur penyesuaian sebelum produksi.** Aplikasi adalah sumber kebenaran tampilan; demo
+mengikutinya. Setelah mengubah `app/static/css/style.css` atau `app/icons.py`, jalankan:
+
+```bash
+python scripts/build_demo_assets.py
+```
+
+Perintah itu menyalin design system ke `docs/assets/style.css` dan membangkitkan
+`docs/assets/icons.js` dari `app/icons.py`, sehingga yang disetujui sekolah di demo
+benar-benar sama dengan yang tayang di produksi. Gaya yang hanya relevan bagi demo
+(bilah "Mode Demo", pengalih peran) tinggal di `docs/assets/demo.css` dan tidak
+pernah tertimpa. Struktur HTML serta nama kelas pada demo dibuat identik dengan
+template Jinja. Rincian ada pada [`docs/README.md`](docs/README.md).
 
 ---
 

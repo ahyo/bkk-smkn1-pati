@@ -56,10 +56,10 @@
       </div>
 
       <div class="job-meta">
-        <span>📋 {{ a.job.title }}</span>
-        <span>🎓 {{ a.seeker.major or '-' }}</span>
-        {% if a.seeker.graduation_year %}<span>🗓️ Lulus {{ a.seeker.graduation_year }}</span>{% endif %}
-        {% if a.seeker.city %}<span>📍 {{ a.seeker.city }}</span>{% endif %}
+        <span>{{ icon('clipboard') }} {{ a.job.title }}</span>
+        <span>{{ icon('cap') }} {{ a.seeker.major or '-' }}</span>
+        {% if a.seeker.graduation_year %}<span>{{ icon('calendar') }} Lulus {{ a.seeker.graduation_year }}</span>{% endif %}
+        {% if a.seeker.city %}<span>{{ icon('pin') }} {{ a.seeker.city }}</span>{% endif %}
       </div>
 
       {% if a.seeker.skill_list %}
@@ -73,9 +73,9 @@
         <small class="muted">Melamar {{ a.created_at | waktu_lalu }}</small>
         <div class="btn-group">
           {% if a.cv_file %}
-            <a class="btn btn-ghost btn-sm" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">📄 CV</a>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">{{ icon('file') }} CV</a>
           {% endif %}
-          <a class="btn btn-primary btn-sm" href="/perusahaan/pelamar/{{ a.id }}">Tinjau →</a>
+          <a class="btn btn-primary btn-sm" href="/perusahaan/pelamar/{{ a.id }}">Tinjau {{ icon('arrow-right', 'xs') }}</a>
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@
 {% include "partials/pagination.html" %}
 {% else %}
 <div class="card">
-  {% with ico='👥', judul='Belum ada pelamar pada filter ini',
+  {% with ico='users', judul='Belum ada pelamar pada filter ini',
           pesan='Ubah filter, atau pastikan lowongan Anda sudah tayang di portal.' %}
     {% include "partials/empty.html" %}
   {% endwith %}

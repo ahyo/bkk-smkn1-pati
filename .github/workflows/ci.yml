@@ -41,3 +41,22 @@ jobs:
 
       - name: Uji asap seluruh rute
         run: python scripts/smoke_test.py
+
+      - name: Pastikan aset demo tersinkron dengan aplikasi
+        run: |
+          python scripts/build_demo_assets.py
+          if ! git diff --quiet -- docs/assets; then
+            echo "::error::Aset demo tertinggal dari aplikasi."
+            echo "Jalankan 'python scripts/build_demo_assets.py' lalu commit hasilnya."
+            git diff --stat -- docs/assets
+            exit 1
+          fi
+          echo "Aset demo sudah sesuai."
+
+      - name: Pastikan tidak ada emoji pada antarmuka
+        run: |
+          if grep -rlP '[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]' app/templates docs/assets/demo-app.js; then
+            echo "::error::Antarmuka memakai emoji. Gunakan sistem ikon SVG (app/icons.py)."
+            exit 1
+          fi
+          echo "Antarmuka bebas emoji."

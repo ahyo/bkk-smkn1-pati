@@ -47,6 +47,14 @@ def tanggal(value: date | datetime | None, with_time: bool = False) -> str:
     return out
 
 
+def bulan_tahun(value: date | datetime | None, singkat: bool = True) -> str:
+    """Label bulan untuk sumbu grafik, mis. "Mar 2026"."""
+    if not value:
+        return "-"
+    nama = BULAN[value.month]
+    return f"{nama[:3] if singkat else nama} {value.year}"
+
+
 def waktu_lalu(value: datetime | None) -> str:
     if not value:
         return "-"

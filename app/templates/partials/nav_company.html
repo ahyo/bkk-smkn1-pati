@@ -1,14 +1,14 @@
 {% set p = request.url.path %}
 <div class="sidebar-label">Perusahaan</div>
 <nav>
-  <a href="/perusahaan" class="{{ 'active' if p == '/perusahaan' or p == '/perusahaan/' }}"><span class="ico">📊</span> Ringkasan</a>
-  <a href="/perusahaan/lowongan" class="{{ 'active' if p.startswith('/perusahaan/lowongan') }}"><span class="ico">📋</span> Lowongan Saya</a>
-  <a href="/perusahaan/pelamar" class="{{ 'active' if p.startswith('/perusahaan/pelamar') }}"><span class="ico">👥</span> Pelamar</a>
-  <a href="/perusahaan/profil" class="{{ 'active' if p.startswith('/perusahaan/profil') }}"><span class="ico">🏢</span> Profil Perusahaan</a>
+  <a href="/perusahaan" class="{{ 'active' if p == '/perusahaan' or p == '/perusahaan/' }}">{{ icon('chart', 'md', 'ico') }} Ringkasan</a>
+  <a href="/perusahaan/lowongan" class="{{ 'active' if p.startswith('/perusahaan/lowongan') }}">{{ icon('clipboard', 'md', 'ico') }} Lowongan Saya</a>
+  <a href="/perusahaan/pelamar" class="{{ 'active' if p.startswith('/perusahaan/pelamar') }}">{{ icon('users', 'md', 'ico') }} Pelamar</a>
+  <a href="/perusahaan/profil" class="{{ 'active' if p.startswith('/perusahaan/profil') }}">{{ icon('building', 'md', 'ico') }} Profil Perusahaan</a>
 </nav>
 <div class="sidebar-label">Aksi Cepat</div>
 <nav>
-  <a href="/perusahaan/lowongan/baru"><span class="ico">➕</span> Pasang Lowongan</a>
-  <a href="/lowongan"><span class="ico">🔍</span> Lihat Portal Publik</a>
-  <a href="/akun/kata-sandi"><span class="ico">🔑</span> Kata Sandi</a>
+  <a href="/perusahaan/lowongan/baru">{{ icon('plus', 'md', 'ico') }} Pasang Lowongan</a>
+  <a href="/lowongan">{{ icon('search', 'md', 'ico') }} Lihat Portal Publik</a>
+  <a href="/akun/kata-sandi">{{ icon('key', 'md', 'ico') }} Kata Sandi</a>
 </nav>

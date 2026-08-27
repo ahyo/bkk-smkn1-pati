@@ -1,5 +1,5 @@
 <div class="empty">
-  <div class="ico">{{ ico | default('📭') }}</div>
+  <div class="ico">{{ icon(ico | default('inbox'), '2xl') }}</div>
   <h3>{{ judul | default('Belum ada data') }}</h3>
   <p>{{ pesan | default('Data akan muncul di sini setelah tersedia.') }}</p>
   {% if aksi_url %}<a href="{{ aksi_url }}" class="btn btn-primary mt-1">{{ aksi_label | default('Mulai') }}</a>{% endif %}

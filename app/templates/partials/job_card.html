@@ -6,29 +6,32 @@
     {% else %}{{ job.company.initials }}{% endif %}
   </div>
   <div class="job-main">
-    <h3><a href="/lowongan/{{ job.slug }}">{{ job.title }}</a></h3>
+    <div class="job-head">
+      <h3><a href="/lowongan/{{ job.slug }}">{{ job.title }}</a></h3>
+      <span class="job-type">{{ job.employment_type | label_kerja }}</span>
+    </div>
     <div class="job-company">
       <a href="/perusahaan-mitra/{{ job.company.slug }}">{{ job.company.name }}</a>
-      {% if job.company.is_verified %}<span title="Terverifikasi BKK">✅</span>{% endif %}
+      {% if job.company.is_verified %}
+        <span class="verified-mark" title="Perusahaan terverifikasi BKK">{{ icon('verified', 'sm') }}</span>
+      {% endif %}
     </div>
     <div class="job-meta">
-      <span>📍 {{ job.location }}{% if job.is_remote %} · Remote{% endif %}</span>
-      <span>💼 {{ job.employment_type | label_kerja }}</span>
-      {% if job.major_target %}<span>🎓 {{ job.major_target }}</span>{% endif %}
-      <span>👥 {{ job.quota }} orang</span>
+      <span>{{ icon('pin') }} {{ job.location }}{% if job.is_remote %} · Remote{% endif %}</span>
+      {% if job.major_target %}<span>{{ icon('cap') }} {{ job.major_target }}</span>{% endif %}
+      <span>{{ icon('users') }} {{ job.quota }} posisi</span>
     </div>
-    <div class="job-salary">💰 {{ job.salary_display }}</div>
+    <div class="job-salary">{{ job.salary_display }}</div>
     <div class="job-foot">
       <div class="chips">
-        {% if job.deadline %}
-          <span class="chip">⏳ Tutup {{ job.deadline | tanggal }}</span>
-        {% else %}
-          <span class="chip">⏳ Tanpa batas waktu</span>
-        {% endif %}
-        <span class="chip">👁️ {{ job.views or 0 }} dilihat</span>
-        {% if job.published_at %}<span class="chip">🕒 {{ job.published_at | waktu_lalu }}</span>{% endif %}
+        <span class="chip">{{ icon('clock') }}
+          {% if job.deadline %}Tutup {{ job.deadline | tanggal }}{% else %}Tanpa batas waktu{% endif %}</span>
+        <span class="chip">{{ icon('eye') }} {{ job.views or 0 }} dilihat</span>
+        {% if job.published_at %}<span class="chip">{{ icon('history') }} {{ job.published_at | waktu_lalu }}</span>{% endif %}
       </div>
-      <a href="/lowongan/{{ job.slug }}" class="btn btn-outline btn-sm">Lihat Detail →</a>
+      <a href="/lowongan/{{ job.slug }}" class="btn btn-outline btn-sm">
+        Lihat Detail {{ icon('arrow-right', 'xs') }}
+      </a>
     </div>
   </div>
 </article>

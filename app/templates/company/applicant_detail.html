@@ -18,13 +18,13 @@
           <p class="muted mb-1">{{ app.seeker.headline or 'Pencari kerja' }}</p>
           <div class="chips">
             <span class="badge {{ app.status | badge_lamaran }}">{{ app.status | label_status_lamaran }}</span>
-            {% if app.seeker.major %}<span class="chip">🎓 {{ app.seeker.major }}</span>{% endif %}
-            {% if app.seeker.graduation_year %}<span class="chip">🗓️ Lulus {{ app.seeker.graduation_year }}</span>{% endif %}
+            {% if app.seeker.major %}<span class="chip">{{ icon('cap') }} {{ app.seeker.major }}</span>{% endif %}
+            {% if app.seeker.graduation_year %}<span class="chip">{{ icon('calendar') }} Lulus {{ app.seeker.graduation_year }}</span>{% endif %}
             {% if app.seeker.open_to_work %}<span class="badge ok">Terbuka untuk kerja</span>{% endif %}
           </div>
         </div>
         {% if app.cv_file %}
-          <a class="btn btn-outline" href="{{ url_for('static', path=app.cv_file) }}" target="_blank">📄 Unduh CV</a>
+          <a class="btn btn-outline" href="{{ url_for('static', path=app.cv_file) }}" target="_blank">{{ icon('file') }} Unduh CV</a>
         {% endif %}
       </div>
     </div>
@@ -34,9 +34,9 @@
       <div class="card-body">
         <h3><a href="/lowongan/{{ app.job.slug }}">{{ app.job.title }}</a></h3>
         <div class="job-meta">
-          <span>📍 {{ app.job.location }}</span>
-          <span>💼 {{ app.job.employment_type | label_kerja }}</span>
-          <span>🕒 Dilamar {{ app.created_at | tanggal_jam }}</span>
+          <span>{{ icon('pin') }} {{ app.job.location }}</span>
+          <span>{{ icon('briefcase') }} {{ app.job.employment_type | label_kerja }}</span>
+          <span>{{ icon('history') }} Dilamar {{ app.created_at | tanggal_jam }}</span>
         </div>
         {% if app.cover_letter %}
           <div class="divider"></div>
@@ -124,7 +124,7 @@
           {% endfor %}
         </ul>
         {% if app.status == ApplicationStatus.REJECTED %}
-          <div class="alert alert-danger mb-0"><span>⛔</span><span>Kandidat ditandai tidak lolos.</span></div>
+          <div class="alert alert-danger mb-0"><span>{{ icon('alert') }}</span><span>Kandidat ditandai tidak lolos.</span></div>
         {% elif app.status == ApplicationStatus.WITHDRAWN %}
           <div class="alert alert-warning mb-0"><span>↩️</span><span>Lamaran dibatalkan oleh pelamar.</span></div>
         {% endif %}

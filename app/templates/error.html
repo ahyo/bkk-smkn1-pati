@@ -3,7 +3,7 @@
 {% block content %}
 <div class="card" style="max-width:620px;margin:3rem auto">
   <div class="card-body center">
-    <div style="font-size:3.4rem;line-height:1">{{ {403:'🔒',404:'🔍',422:'📝',500:'⚠️'}.get(code,'⚠️') }}</div>
+    <div class="error-mark">{{ icon({403:'lock',404:'search',422:'file'}.get(code,'warning'), '3xl') }}</div>
     <h1 style="font-size:2.6rem;margin:.3rem 0">{{ code }}</h1>
     <p class="muted">{{ detail }}</p>
     <div class="btn-group mt-2" style="justify-content:center">

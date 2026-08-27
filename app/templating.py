@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 
 from app import __version__
 from app.config import settings
+from app.icons import icon
 from app.models import (
     APPLICATION_STATUS_LABEL,
     COMPANY_STATUS_LABEL,
@@ -70,6 +71,7 @@ templates.env.filters.update(
 )
 
 templates.env.globals.update(
+    icon=icon,
     settings=settings,
     app_version=__version__,
     MAJORS=MAJORS,

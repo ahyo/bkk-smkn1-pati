@@ -60,7 +60,7 @@
   {% include "partials/pagination.html" %}
 {% else %}
   <div class="card">
-    {% with ico='🔍', judul='Tidak ada lowongan yang cocok',
+    {% with ico='search', judul='Tidak ada lowongan yang cocok',
             pesan='Coba ubah kata kunci, longgarkan filter jurusan, atau kosongkan lokasi.',
             aksi_url='/lowongan', aksi_label='Reset Pencarian' %}
       {% include "partials/empty.html" %}

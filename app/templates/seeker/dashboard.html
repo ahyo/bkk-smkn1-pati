@@ -5,10 +5,10 @@
 {% block main %}
 <div class="page-head">
   <div>
-    <h1>Halo, {{ current_user.full_name.split()[0] }} 👋</h1>
+    <h1>Halo, {{ current_user.full_name.split()[0] }}</h1>
     <p>Ringkasan aktivitas pencarian kerja Anda.</p>
   </div>
-  <a href="/lowongan" class="btn btn-primary">🔍 Cari Lowongan</a>
+  <a href="/lowongan" class="btn btn-primary">{{ icon('search') }} Cari Lowongan</a>
 </div>
 
 {% if seeker.completeness < 80 %}
@@ -36,7 +36,7 @@
 <div class="card mb-3">
   <div class="card-head">
     <h2>Lamaran terakhir</h2>
-    <a href="/pelamar/lamaran" class="btn btn-ghost btn-sm">Semua lamaran →</a>
+    <a href="/pelamar/lamaran" class="btn btn-ghost btn-sm">Semua lamaran {{ icon('arrow-right', 'xs') }}</a>
   </div>
   {% if apps %}
   <div class="table-wrap">
@@ -46,7 +46,7 @@
         {% for a in apps %}
         <tr>
           <td><a class="cell-main" href="/lowongan/{{ a.job.slug }}">{{ a.job.title }}</a>
-              <div class="cell-sub">📍 {{ a.job.location }}</div></td>
+              <div class="cell-sub">{{ icon('pin') }} {{ a.job.location }}</div></td>
           <td>{{ a.job.company.name }}</td>
           <td class="nowrap">{{ a.created_at | tanggal }}</td>
           <td><span class="badge {{ a.status | badge_lamaran }}">{{ a.status | label_status_lamaran }}</span></td>
@@ -56,7 +56,7 @@
     </table>
   </div>
   {% else %}
-    {% with ico='📨', judul='Belum ada lamaran', pesan='Mulai lamar lowongan yang sesuai kompetensi keahlian Anda.',
+    {% with ico='inbox', judul='Belum ada lamaran', pesan='Mulai lamar lowongan yang sesuai kompetensi keahlian Anda.',
             aksi_url='/lowongan', aksi_label='Cari Lowongan' %}
       {% include "partials/empty.html" %}
     {% endwith %}

@@ -5,7 +5,7 @@
 {% block main %}
 <div class="page-head">
   <div><h1>Lowongan Saya</h1><p>{{ meta.total }} lowongan terdaftar.</p></div>
-  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a>
+  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">{{ icon('plus') }} Pasang Lowongan</a>
 </div>
 
 <div class="tabs">
@@ -41,8 +41,8 @@
         <tr>
           <td>
             <div class="cell-main"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
-            <div class="cell-sub">📍 {{ j.location }} · 🎓 {{ j.major_target or 'Umum' }} · 👁️ {{ j.views or 0 }}</div>
-            {% if j.review_note %}<div class="cell-sub" style="color:var(--danger-700)">💬 {{ j.review_note }}</div>{% endif %}
+            <div class="cell-sub">{{ icon('pin') }} {{ j.location }} · {{ icon('cap') }} {{ j.major_target or 'Umum' }} · {{ icon('eye') }} {{ j.views or 0 }}</div>
+            {% if j.review_note %}<div class="cell-sub" style="color:var(--danger-700)">{{ icon('message') }} {{ j.review_note }}</div>{% endif %}
           </td>
           <td class="cell-sub nowrap">{{ j.employment_type | label_kerja }}</td>
           <td>{{ j.quota }}</td>
@@ -76,7 +76,7 @@
 {% include "partials/pagination.html" %}
 {% else %}
 <div class="card">
-  {% with ico='📋', judul='Belum ada lowongan', pesan='Buat lowongan pertama Anda dan jangkau lulusan sekolah.',
+  {% with ico='clipboard', judul='Belum ada lowongan', pesan='Buat lowongan pertama Anda dan jangkau lulusan sekolah.',
           aksi_url='/perusahaan/lowongan/baru', aksi_label='Pasang Lowongan' %}
     {% include "partials/empty.html" %}
   {% endwith %}

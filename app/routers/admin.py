@@ -30,7 +30,7 @@ from app.models import (
 from app.routers.auth import log_activity
 from app.security import hash_password, password_issues
 from app.templating import render
-from app.utils import flash, paginate, tanggal
+from app.utils import bulan_tahun, flash, paginate
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(admin_required)])
 
@@ -77,7 +77,7 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         .order_by("bulan")
         .all()
     )
-    tren = [{"label": tanggal(r[0])[-8:] if r[0] else "-", "value": r[1]} for r in rows]
+    tren = [{"label": bulan_tahun(r[0]), "value": r[1]} for r in rows]
     tren_max = max([t["value"] for t in tren], default=1) or 1
 
     per_jurusan = (

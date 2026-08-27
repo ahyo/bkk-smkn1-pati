@@ -28,10 +28,10 @@
           <small class="muted">{{ c.industry or 'Bidang usaha umum' }}</small>
         </div>
       </div>
-      <div class="small muted">📍 {{ c.city or 'Lokasi belum diisi' }}</div>
+      <div class="small muted">{{ icon('pin') }} {{ c.city or 'Lokasi belum diisi' }}</div>
       <div class="job-foot">
         <span class="badge {{ 'ok' if c.is_verified else 'muted' }}">{{ counts.get(c.id, 0) }} lowongan aktif</span>
-        <a href="/perusahaan-mitra/{{ c.slug }}" class="btn btn-ghost btn-sm">Detail →</a>
+        <a href="/perusahaan-mitra/{{ c.slug }}" class="btn btn-ghost btn-sm">Detail {{ icon('arrow-right', 'xs') }}</a>
       </div>
     </div>
   </div>
@@ -41,7 +41,7 @@
 {% include "partials/pagination.html" %}
 {% else %}
 <div class="card">
-  {% with ico='🏢', judul='Belum ada perusahaan mitra terverifikasi',
+  {% with ico='building', judul='Belum ada perusahaan mitra terverifikasi',
           pesan='Perusahaan yang mendaftar akan tampil setelah diverifikasi pengelola BKK.' %}
     {% include "partials/empty.html" %}
   {% endwith %}

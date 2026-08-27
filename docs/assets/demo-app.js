@@ -118,23 +118,27 @@
     return '<article class="job-card">' +
       '<div class="logo-box">' + esc(inisial(c.name)) + '</div>' +
       '<div class="job-main">' +
-        '<h3><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></h3>' +
-        '<div class="job-company"><a href="#/mitra/' + esc(c.slug) + '">' + esc(c.name) + '</a>' +
-          (c.status === "verified" ? ' <span title="Terverifikasi">✅</span>' : "") + '</div>' +
-        '<div class="job-meta">' +
-          '<span>📍 ' + esc(j.location) + (j.remote ? " · Remote" : "") + '</span>' +
-          '<span>💼 ' + esc(DB.employment[j.type]) + '</span>' +
-          (j.major ? '<span>🎓 ' + esc(j.major) + '</span>' : "") +
-          '<span>👥 ' + j.quota + ' orang</span>' +
+        '<div class="job-head">' +
+          '<h3><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></h3>' +
+          '<span class="job-type">' + esc(DB.employment[j.type]) + '</span>' +
         '</div>' +
-        '<div class="job-salary">💰 ' + esc(gaji(j)) + '</div>' +
+        '<div class="job-company"><a href="#/mitra/' + esc(c.slug) + '">' + esc(c.name) + '</a>' +
+          (c.status === "verified"
+            ? '<span class="verified-mark" title="Perusahaan terverifikasi BKK">' + ICON('verified') + '</span>'
+            : "") + '</div>' +
+        '<div class="job-meta">' +
+          '<span>' + ICON('pin') + ' ' + esc(j.location) + (j.remote ? " · Remote" : "") + '</span>' +
+          (j.major ? '<span>' + ICON('cap') + ' ' + esc(j.major) + '</span>' : "") +
+          '<span>' + ICON('users') + ' ' + j.quota + ' posisi</span>' +
+        '</div>' +
+        '<div class="job-salary">' + esc(gaji(j)) + '</div>' +
         '<div class="job-foot">' +
           '<div class="chips">' +
-            '<span class="chip">⏳ ' + (j.deadline ? "Tutup " + tgl(j.deadline) : "Tanpa batas waktu") + '</span>' +
-            '<span class="chip">👁️ ' + (j.views || 0) + ' dilihat</span>' +
-            '<span class="chip">📨 ' + appsOfJob(j.id).length + ' pelamar</span>' +
+            '<span class="chip">' + ICON('clock') + ' ' + (j.deadline ? "Tutup " + tgl(j.deadline) : "Tanpa batas waktu") + '</span>' +
+            '<span class="chip">' + ICON('eye') + ' ' + (j.views || 0) + ' dilihat</span>' +
+            '<span class="chip">' + ICON('inbox') + ' ' + appsOfJob(j.id).length + ' pelamar</span>' +
           '</div>' +
-          '<a href="#/lowongan/' + esc(j.slug) + '" class="btn btn-outline btn-sm">Lihat Detail →</a>' +
+          '<a href="#/lowongan/' + esc(j.slug) + '" class="btn btn-outline btn-sm">Lihat Detail ' + ICON('arrow-right', 'xs') + '</a>' +
         '</div>' +
       '</div></article>';
   }
@@ -146,7 +150,7 @@
   }
 
   function empty(ico, judul, pesan, url, label) {
-    return '<div class="empty"><div class="ico">' + ico + '</div><h3>' + esc(judul) + '</h3>' +
+    return '<div class="empty"><div class="ico">' + ICON(ico, "2xl") + '</div><h3>' + esc(judul) + '</h3>' +
       '<p>' + esc(pesan) + '</p>' +
       (url ? '<a href="' + url + '" class="btn btn-primary mt-1">' + esc(label) + '</a>' : "") + '</div>';
   }
@@ -161,27 +165,27 @@
     var groups;
     if (role === "seeker") {
       groups = [["Pencari Kerja", [
-        ["#/pelamar", "🎯", "Ringkasan"], ["#/pelamar/lamaran", "📨", "Lamaran Saya"],
-        ["#/pelamar/tersimpan", "🔖", "Tersimpan"], ["#/pelamar/profil", "👤", "Profil & CV"]]],
-        ["Jelajahi", [["#/lowongan", "🔍", "Cari Lowongan"], ["#/mitra", "🏢", "Perusahaan Mitra"]]]];
+        ["#/pelamar", "target", "Ringkasan"], ["#/pelamar/lamaran", "inbox", "Lamaran Saya"],
+        ["#/pelamar/tersimpan", "bookmark", "Tersimpan"], ["#/pelamar/profil", "user", "Profil & CV"]]],
+        ["Jelajahi", [["#/lowongan", "search", "Cari Lowongan"], ["#/mitra", "building", "Perusahaan Mitra"]]]];
     } else if (role === "company") {
       groups = [["Perusahaan", [
-        ["#/perusahaan", "📊", "Ringkasan"], ["#/perusahaan/lowongan", "📋", "Lowongan Saya"],
-        ["#/perusahaan/pelamar", "👥", "Pelamar"], ["#/perusahaan/profil", "🏢", "Profil Perusahaan"]]],
-        ["Aksi Cepat", [["#/perusahaan/lowongan/baru", "➕", "Pasang Lowongan"], ["#/lowongan", "🔍", "Portal Publik"]]]];
+        ["#/perusahaan", "chart", "Ringkasan"], ["#/perusahaan/lowongan", "clipboard", "Lowongan Saya"],
+        ["#/perusahaan/pelamar", "users", "Pelamar"], ["#/perusahaan/profil", "building", "Profil Perusahaan"]]],
+        ["Aksi Cepat", [["#/perusahaan/lowongan/baru", "plus", "Pasang Lowongan"], ["#/lowongan", "search", "Portal Publik"]]]];
     } else {
       groups = [["Panel Admin BKK", [
-        ["#/admin", "🛡️", "Ringkasan"], ["#/admin/perusahaan", "🏢", "Perusahaan"],
-        ["#/admin/lowongan", "📋", "Lowongan"], ["#/admin/lamaran", "📨", "Lamaran"],
-        ["#/admin/pengguna", "👥", "Pengguna"]]],
-        ["Pelaporan", [["#/admin/laporan", "📊", "Laporan & Rekap"],
-        ["#/admin/pengumuman", "📢", "Pengumuman"], ["#/admin/log", "🧾", "Log Aktivitas"]]]];
+        ["#/admin", "shield", "Ringkasan"], ["#/admin/perusahaan", "building", "Perusahaan"],
+        ["#/admin/lowongan", "clipboard", "Lowongan"], ["#/admin/lamaran", "inbox", "Lamaran"],
+        ["#/admin/pengguna", "users", "Pengguna"]]],
+        ["Pelaporan", [["#/admin/laporan", "chart", "Laporan & Rekap"],
+        ["#/admin/pengumuman", "megaphone", "Pengumuman"], ["#/admin/log", "history", "Log Aktivitas"]]]];
     }
     return groups.map(function (g) {
       return '<div class="sidebar-label">' + esc(g[0]) + '</div><nav>' + g[1].map(function (it) {
         var aktif = it[0] === "#/" + path.join("/") || (it[0] === "#" + location.hash.slice(1).split("?")[0]);
         return '<a href="' + it[0] + '" class="' + (location.hash.split("?")[0] === it[0] ? "active" : "") + '">' +
-          '<span class="ico">' + it[1] + '</span> ' + esc(it[2]) + '</a>';
+          ICON(it[1], "md", "ico") + ' ' + esc(it[2]) + '</a>';
       }).join("") + '</nav>';
     }).join("");
   }
@@ -213,7 +217,7 @@
     publicJobs().forEach(function (j) { perJurusan[j.major || "Umum"] = (perJurusan[j.major || "Umum"] || 0) + 1; });
 
     return '<section class="hero"><div class="container">' +
-      '<span class="eyebrow">🎓 Portal Resmi BKK ' + SEKOLAH + '</span>' +
+      '<span class="eyebrow">' + ICON('cap') + ' Portal Resmi BKK ' + SEKOLAH + '</span>' +
       '<h1>Temukan Karier Pertamamu Bersama Mitra Industri Sekolah</h1>' +
       '<p class="lead">Semua lowongan di portal ini diverifikasi terlebih dahulu oleh pengelola BKK sekolah, ' +
       'sehingga alumni terhindar dari informasi kerja palsu.</p>' +
@@ -222,7 +226,7 @@
         '<input type="text" name="lokasi" placeholder="Kota / kabupaten">' +
         '<select name="jurusan"><option value="">Semua Kompetensi Keahlian</option>' +
         DB.majors.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join("") + '</select>' +
-        '<button class="btn btn-accent" type="submit">🔍 Cari Lowongan</button>' +
+        '<button class="btn btn-accent" type="submit">' + ICON('search') + ' Cari Lowongan</button>' +
       '</form>' +
       '<div class="hero-stats">' +
         '<div><b>' + stats.lowongan + '</b><span>Lowongan aktif</span></div>' +
@@ -233,7 +237,7 @@
 
       '<section class="section" style="padding-bottom:0"><div class="container"><div class="grid grid-3">' +
       DB.announcements.filter(function (a) { return a.published; }).slice(0, 3).map(function (a) {
-        return '<div class="card"><div class="card-body"><span class="badge accent">📢 Pengumuman</span>' +
+        return '<div class="card"><div class="card-body"><span class="badge accent">' + ICON('megaphone') + ' Pengumuman</span>' +
           '<h3 class="mt-1">' + esc(a.title) + '</h3>' +
           '<p class="small muted">' + esc(a.body.slice(0, 160)) + (a.body.length > 160 ? "…" : "") + '</p>' +
           '<small class="muted">' + tgl(a.created) + '</small></div></div>';
@@ -243,16 +247,16 @@
       '<div class="section-head"><div><span class="eyebrow-dark">Lowongan Terbaru</span>' +
       '<h2>Peluang kerja yang baru dibuka</h2>' +
       '<p>Diperbarui setiap kali mitra industri mengirimkan permintaan tenaga kerja.</p></div>' +
-      '<a href="#/lowongan" class="btn btn-outline">Lihat Semua Lowongan →</a></div>' +
+      '<a href="#/lowongan" class="btn btn-outline">Lihat Semua Lowongan ' + ICON('arrow-right', 'xs') + '</a></div>' +
       (jobs.length ? '<div class="grid grid-2">' + jobs.map(jobCard).join("") + '</div>'
-                   : '<div class="card">' + empty("🗂️", "Belum ada lowongan tayang", "Silakan periksa kembali nanti.") + '</div>') +
+                   : '<div class="card">' + empty("folder", "Belum ada lowongan tayang", "Silakan periksa kembali nanti.") + '</div>') +
       '</div></section>' +
 
       '<section class="section" style="background:var(--surface);border-block:1px solid var(--line)"><div class="container">' +
       '<div class="section-head"><div><span class="eyebrow-dark">Berdasarkan Jurusan</span>' +
       '<h2>Lowongan sesuai kompetensi keahlian</h2></div></div><div class="chips">' +
       Object.keys(perJurusan).map(function (m) {
-        return '<a class="chip" href="#/lowongan?jurusan=' + encodeURIComponent(m) + '">🎓 ' + esc(m) +
+        return '<a class="chip" href="#/lowongan?jurusan=' + encodeURIComponent(m) + '">' + ICON('cap') + ' ' + esc(m) +
           ' <b>' + perJurusan[m] + '</b></a>';
       }).join("") + '</div></div></section>' +
 
@@ -317,7 +321,7 @@
       '<div class="btn-group"><button class="btn btn-primary" type="submit">Terapkan</button>' +
       '<a href="#/lowongan" class="btn btn-ghost">Reset</a></div></form></div>' +
       (list.length ? '<div class="grid">' + list.map(jobCard).join("") + '</div>'
-        : '<div class="card">' + empty("🔍", "Tidak ada lowongan yang cocok",
+        : '<div class="card">' + empty("search", "Tidak ada lowongan yang cocok",
             "Coba ubah kata kunci atau longgarkan filter.", "#/lowongan", "Reset Pencarian") + '</div>');
   }
 
@@ -338,20 +342,20 @@
         '<a href="#/masuk" class="btn btn-primary btn-block">Masuk untuk Melamar</a>';
     } else if (u.role === "seeker") {
       if (sudah) {
-        aksi = '<div class="alert alert-success mb-2"><span>✅</span><span>Anda sudah melamar pada lowongan ini.</span></div>' +
+        aksi = '<div class="alert alert-success mb-2"><span>' + ICON('verified') + '</span><span>Anda sudah melamar pada lowongan ini.</span></div>' +
           '<a href="#/pelamar/lamaran" class="btn btn-outline btn-block">Lihat Status Lamaran</a>';
       } else if (expired(j)) {
-        aksi = '<div class="alert alert-danger mb-2"><span>⛔</span><span>Batas akhir lamaran sudah lewat.</span></div>';
+        aksi = '<div class="alert alert-danger mb-2"><span>' + ICON('alert') + '</span><span>Batas akhir lamaran sudah lewat.</span></div>';
       } else {
         aksi = '<h3>Kirim Lamaran</h3><form data-form="lamar" data-id="' + j.id + '">' +
           '<div class="field"><label>Surat lamaran singkat</label>' +
           '<textarea name="cover" maxlength="1500" placeholder="Perkenalkan diri Anda dan jelaskan mengapa cocok untuk posisi ini…"></textarea></div>' +
           '<div class="field"><label>Lampirkan CV</label><input type="file" name="cv" accept=".pdf,.doc,.docx">' +
           '<div class="help">' + (s && s.cv ? "CV tersimpan akan dipakai bila dikosongkan." : "Format PDF/DOC/DOCX.") + '</div></div>' +
-          '<button class="btn btn-primary btn-block" type="submit">📨 Kirim Lamaran</button></form>';
+          '<button class="btn btn-primary btn-block" type="submit">' + ICON('inbox') + ' Kirim Lamaran</button></form>';
       }
       aksi += '<button class="btn btn-ghost btn-block mt-1" data-action="toggle-simpan" data-id="' + j.id + '">' +
-        (tersimpan ? "🔖 Hapus dari tersimpan" : "🔖 Simpan lowongan") + '</button>';
+        (tersimpan ? ICON('bookmark') + " Hapus dari tersimpan" : ICON('bookmark') + " Simpan lowongan") + '</button>';
     } else if (u.role === "company") {
       aksi = '<p class="small muted">Anda masuk sebagai perusahaan.</p>' +
         '<a href="#/perusahaan/pelamar" class="btn btn-primary btn-block">Lihat Pelamar (' + appsOfJob(j.id).length + ')</a>' +
@@ -364,7 +368,7 @@
     function baris(l, v) { return '<div><small class="muted">' + l + '</small><div class="strong">' + v + '</div></div>'; }
 
     return '<div class="breadcrumb"><a href="#/">Beranda</a> › <a href="#/lowongan">Lowongan</a> › ' + esc(j.title) + '</div>' +
-      (j.status !== "published" ? '<div class="alert alert-warning"><span>⚠️</span><span>Pratinjau: lowongan ini berstatus <b>' +
+      (j.status !== "published" ? '<div class="alert alert-warning"><span>' + ICON('warning') + '</span><span>Pratinjau: lowongan ini berstatus <b>' +
         esc(DB.jobStatus[j.status]) + '</b> dan belum tampil untuk publik.</span></div>' : "") +
       '<div class="layout-side-r"><div>' +
       '<div class="card mb-3"><div class="card-body">' +
@@ -373,13 +377,13 @@
       '<div class="job-company"><a href="#/mitra/' + esc(c.slug) + '">' + esc(c.name) + '</a>' +
       (c.status === "verified" ? ' <span class="badge ok badge-dot">Terverifikasi</span>' : "") + '</div></div></div>' +
       '<div class="grid grid-2 mt-3">' +
-        baris("Lokasi penempatan", "📍 " + esc(j.location) + (j.remote ? " · Remote" : "")) +
-        baris("Tipe pekerjaan", "💼 " + esc(DB.employment[j.type])) +
-        baris("Estimasi gaji", '<span style="color:var(--ok-700)">💰 ' + esc(gaji(j)) + '</span>') +
-        baris("Kuota", "👥 " + j.quota + " orang") +
-        baris("Jurusan dibutuhkan", "🎓 " + esc(j.major || "Semua jurusan")) +
-        baris("Batas lamaran", "⏳ " + (j.deadline ? tgl(j.deadline) : "Tidak ditentukan")) +
-        baris("Pendidikan minimal", "📘 SMK/SMA Sederajat") +
+        baris("Lokasi penempatan", ICON('pin') + " " + esc(j.location) + (j.remote ? " · Remote" : "")) +
+        baris("Tipe pekerjaan", ICON('briefcase') + " " + esc(DB.employment[j.type])) +
+        baris("Estimasi gaji", '<span style="color:var(--ok-700)">' + ICON('money') + ' ' + esc(gaji(j)) + '</span>') +
+        baris("Kuota", ICON('users') + " " + j.quota + " orang") +
+        baris("Jurusan dibutuhkan", ICON('cap') + " " + esc(j.major || "Semua jurusan")) +
+        baris("Batas lamaran", ICON('clock') + " " + (j.deadline ? tgl(j.deadline) : "Tidak ditentukan")) +
+        baris("Pendidikan minimal", ICON('book') + " SMK/SMA Sederajat") +
         baris("Ketentuan lain", esc(j.gender || "Semua") + (j.maxAge ? " · maks. " + j.maxAge + " tahun" : "")) +
       '</div></div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Deskripsi Pekerjaan</h2></div>' +
@@ -397,7 +401,7 @@
       '</div></div></div>' +
       '<div class="card"><div class="card-body"><h3>Tentang perusahaan</h3>' +
       '<p class="small muted">' + esc((c.desc || "").slice(0, 260)) + '</p>' +
-      '<div class="small"><div>🏭 ' + esc(c.industry) + '</div><div>📍 ' + esc(c.city) + '</div></div>' +
+      '<div class="small"><div>' + ICON('factory') + ' ' + esc(c.industry) + '</div><div>' + ICON('pin') + ' ' + esc(c.city) + '</div></div>' +
       '<a href="#/mitra/' + esc(c.slug) + '" class="btn btn-outline btn-sm btn-block mt-2">Profil Perusahaan</a>' +
       '</div></div></aside></div>';
   }
@@ -419,10 +423,10 @@
           '<div class="flex gap-sm items-center mb-2"><div class="logo-box">' + esc(inisial(c.name)) + '</div>' +
           '<div style="min-width:0"><h3 class="truncate" style="margin:0"><a href="#/mitra/' + esc(c.slug) + '">' + esc(c.name) + '</a></h3>' +
           '<small class="muted">' + esc(c.industry) + '</small></div></div>' +
-          '<div class="small muted">📍 ' + esc(c.city) + '</div>' +
+          '<div class="small muted">' + ICON('pin') + ' ' + esc(c.city) + '</div>' +
           '<div class="job-foot"><span class="badge ok">' + n + ' lowongan aktif</span>' +
-          '<a href="#/mitra/' + esc(c.slug) + '" class="btn btn-ghost btn-sm">Detail →</a></div></div></div>';
-      }).join("") + '</div>' : '<div class="card">' + empty("🏢", "Tidak ada perusahaan", "Coba kata kunci lain.") + '</div>');
+          '<a href="#/mitra/' + esc(c.slug) + '" class="btn btn-ghost btn-sm">Detail ' + ICON('arrow-right', 'xs') + '</a></div></div></div>';
+      }).join("") + '</div>' : '<div class="card">' + empty("building", "Tidak ada perusahaan", "Coba kata kunci lain.") + '</div>');
   }
 
   function pageMitraDetail(slug) {
@@ -434,17 +438,17 @@
       '<div class="logo-box" style="width:96px;height:96px;font-size:1.6rem">' + esc(inisial(c.name)) + '</div>' +
       '<div style="flex:1;min-width:220px"><h1 style="margin-bottom:.25rem">' + esc(c.name) + '</h1>' +
       '<div class="chips"><span class="badge ok badge-dot">Mitra Terverifikasi</span>' +
-      '<span class="chip">🏭 ' + esc(c.industry) + '</span><span class="chip">📍 ' + esc(c.city) + '</span>' +
-      '<span class="chip">👥 ' + esc(c.employees) + ' karyawan</span></div></div></div></div>' +
+      '<span class="chip">' + ICON('factory') + ' ' + esc(c.industry) + '</span><span class="chip">' + ICON('pin') + ' ' + esc(c.city) + '</span>' +
+      '<span class="chip">' + ICON('users') + ' ' + esc(c.employees) + ' karyawan</span></div></div></div></div>' +
       '<div class="layout-side-r"><div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Profil Perusahaan</h2></div>' +
       '<div class="card-body prose">' + nl2br(c.desc) + '</div></div>' +
       '<h2 class="mb-2">Lowongan aktif (' + jobs.length + ')</h2>' +
       (jobs.length ? '<div class="grid">' + jobs.map(jobCard).join("") + '</div>'
-        : '<div class="card">' + empty("📭", "Belum ada lowongan aktif", "Perusahaan ini sedang tidak membuka lowongan.") + '</div>') +
+        : '<div class="card">' + empty("inbox", "Belum ada lowongan aktif", "Perusahaan ini sedang tidak membuka lowongan.") + '</div>') +
       '</div><aside><div class="card"><div class="card-head"><h3>Informasi Kontak</h3></div>' +
-      '<div class="card-body small"><p>📍 ' + esc(c.address) + '</p><p>☎️ ' + esc(c.phone) + '</p>' +
-      '<p>👤 ' + esc(c.pic) + '</p><p class="muted">Bergabung sejak ' + tgl(c.joined) + '</p>' +
+      '<div class="card-body small"><p>' + ICON('pin') + ' ' + esc(c.address) + '</p><p>' + ICON('phone') + ' ' + esc(c.phone) + '</p>' +
+      '<p>' + ICON('user') + ' ' + esc(c.pic) + '</p><p class="muted">Bergabung sejak ' + tgl(c.joined) + '</p>' +
       '<div class="divider"></div><p class="tiny muted">Pengelola BKK tidak memungut biaya apa pun dalam proses rekrutmen.</p>' +
       '</div></div></aside></div>';
   }
@@ -476,16 +480,16 @@
 
   function pageMasuk() {
     var akun = [
-      { id: 1, ico: "🛡️", label: "Admin BKK", desc: "Verifikasi mitra, moderasi lowongan, dan rekap penyaluran.", email: "admin@bkksmkn1pati.sch.id" },
-      { id: 2, ico: "🏢", label: "Perusahaan", desc: "Pasang lowongan dan seleksi pelamar (PT Dua Kelinci).", email: "hrd@ptduakelinci.co.id" },
-      { id: 10, ico: "🎓", label: "Pencari Kerja", desc: "Kelola CV, lamar lowongan, pantau seleksi (Aditya Nugroho).", email: "aditya.nugroho@gmail.com" }
+      { id: 1, ico: "shield", label: "Admin BKK", desc: "Verifikasi mitra, moderasi lowongan, dan rekap penyaluran.", email: "admin@bkksmkn1pati.sch.id" },
+      { id: 2, ico: "building", label: "Perusahaan", desc: "Pasang lowongan dan seleksi pelamar (PT Dua Kelinci).", email: "hrd@ptduakelinci.co.id" },
+      { id: 10, ico: "cap", label: "Pencari Kerja", desc: "Kelola CV, lamar lowongan, pantau seleksi (Aditya Nugroho).", email: "aditya.nugroho@gmail.com" }
     ];
     return '<div class="center mb-3"><span class="eyebrow-dark">Mode Demo</span>' +
       '<h1>Masuk sebagai peran mana?</h1>' +
       '<p class="muted">Demo ini tidak memverifikasi kata sandi — pilih salah satu akan langsung masuk ke dashboard peran tersebut.</p></div>' +
       '<div class="grid grid-3" style="max-width:1000px;margin:0 auto">' +
       akun.map(function (a) {
-        return '<div class="role-card"><div class="ico">' + a.ico + '</div><h2>' + esc(a.label) + '</h2>' +
+        return '<div class="role-card"><div class="ico">' + ICON(a.ico, "3xl") + '</div><h2>' + esc(a.label) + '</h2>' +
           '<p class="small muted">' + esc(a.desc) + '</p>' +
           '<p class="tiny muted"><code>' + esc(a.email) + '</code></p>' +
           '<button class="btn btn-primary btn-block" data-action="login" data-id="' + a.id + '">Masuk sebagai ' + esc(a.label) + '</button></div>';
@@ -498,7 +502,7 @@
 
   function pageError(code, detail) {
     return '<div class="card" style="max-width:620px;margin:3rem auto"><div class="card-body center">' +
-      '<div style="font-size:3.4rem;line-height:1">🔍</div><h1 style="font-size:2.6rem;margin:.3rem 0">' + code + '</h1>' +
+      '<div style="font-size:3.4rem;line-height:1">' + ICON('search') + '</div><h1 style="font-size:2.6rem;margin:.3rem 0">' + code + '</h1>' +
       '<p class="muted">' + esc(detail) + '</p>' +
       '<a href="#/" class="btn btn-primary mt-2">Kembali ke Beranda</a></div></div>';
   }
@@ -522,9 +526,9 @@
     })).slice(0, 4);
 
     var c = completeness(s);
-    return '<div class="page-head"><div><h1>Halo, ' + esc(u.name.split(" ")[0]) + ' 👋</h1>' +
+    return '<div class="page-head"><div><h1>Halo, ' + esc(u.name.split(" ")[0]) + ' </h1>' +
       '<p>Ringkasan aktivitas pencarian kerja Anda.</p></div>' +
-      '<a href="#/lowongan" class="btn btn-primary">🔍 Cari Lowongan</a></div>' +
+      '<a href="#/lowongan" class="btn btn-primary">' + ICON('search') + ' Cari Lowongan</a></div>' +
       (c < 80 ? '<div class="card mb-3" style="border-color:var(--warn-500)"><div class="card-body">' +
         '<div class="flex between items-center wrap gap"><div style="flex:1;min-width:240px">' +
         '<h3 class="mb-1">Lengkapi profil Anda (' + c + '%)</h3>' +
@@ -535,17 +539,17 @@
       statCard("Total lamaran", apps.length) + statCard("Dalam proses", proses, "", "warn") +
       statCard("Diterima", diterima, "", "ok") + statCard("Tersimpan", tersimpan, "", "accent") + '</div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Lamaran terakhir</h2>' +
-      '<a href="#/pelamar/lamaran" class="btn btn-ghost btn-sm">Semua lamaran →</a></div>' +
+      '<a href="#/pelamar/lamaran" class="btn btn-ghost btn-sm">Semua lamaran ' + ICON('arrow-right', 'xs') + '</a></div>' +
       (apps.length ? '<div class="table-wrap"><table class="data"><thead><tr>' +
         '<th>Posisi</th><th>Perusahaan</th><th>Dikirim</th><th>Status</th></tr></thead><tbody>' +
         apps.slice(0, 5).map(function (a) {
           var j = job(a.jobId);
           return '<tr><td><a class="cell-main" href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a>' +
-            '<div class="cell-sub">📍 ' + esc(j.location) + '</div></td>' +
+            '<div class="cell-sub">' + ICON('pin') + ' ' + esc(j.location) + '</div></td>' +
             '<td>' + esc(company(j.companyId).name) + '</td><td class="nowrap">' + tgl(a.created) + '</td>' +
             '<td><span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span></td></tr>';
         }).join("") + '</tbody></table></div>'
-        : empty("📨", "Belum ada lamaran", "Mulai lamar lowongan yang sesuai kompetensi Anda.", "#/lowongan", "Cari Lowongan")) +
+        : empty("inbox", "Belum ada lamaran", "Mulai lamar lowongan yang sesuai kompetensi Anda.", "#/lowongan", "Cari Lowongan")) +
       '</div>' +
       '<div class="card"><div class="card-head"><h2>Rekomendasi untuk Anda</h2>' +
       '<span class="badge muted">' + esc(s.major || "Semua jurusan") + '</span></div>' +
@@ -569,20 +573,20 @@
           '<div class="flex between items-center wrap gap"><div style="flex:1;min-width:230px">' +
           '<h3 style="margin-bottom:.15rem"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></h3>' +
           '<div class="job-company">' + esc(c.name) + '</div>' +
-          '<div class="job-meta"><span>📍 ' + esc(j.location) + '</span><span>💼 ' + esc(DB.employment[j.type]) + '</span>' +
-          '<span>🕒 Dilamar ' + tgl(a.created) + '</span></div></div>' +
+          '<div class="job-meta"><span>' + ICON('pin') + ' ' + esc(j.location) + '</span><span>' + ICON('briefcase') + ' ' + esc(DB.employment[j.type]) + '</span>' +
+          '<span>' + ICON('history') + ' Dilamar ' + tgl(a.created) + '</span></div></div>' +
           '<div class="right"><span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span>' +
           '<div class="tiny muted mt-1">Diperbarui ' + tgl(a.updated) + '</div></div></div>' +
-          (a.interview ? '<div class="alert alert-warning mt-2 mb-0"><span>📅</span><span>Jadwal wawancara: <b>' +
+          (a.interview ? '<div class="alert alert-warning mt-2 mb-0"><span>' + ICON('calendar') + '</span><span>Jadwal wawancara: <b>' +
             tglJam(a.interview) + '</b></span></div>' : "") +
-          (a.note ? '<div class="alert alert-info mt-2 mb-0"><span>💬</span><span>Catatan perusahaan: ' + esc(a.note) + '</span></div>' : "") +
-          '<div class="job-foot"><div class="chips"><span class="chip">📄 CV terkirim</span>' +
-          '<span class="chip">🎓 ' + esc(j.major || "Umum") + '</span></div>' +
+          (a.note ? '<div class="alert alert-info mt-2 mb-0"><span>' + ICON('message') + '</span><span>Catatan perusahaan: ' + esc(a.note) + '</span></div>' : "") +
+          '<div class="job-foot"><div class="chips"><span class="chip">' + ICON('file') + ' CV terkirim</span>' +
+          '<span class="chip">' + ICON('cap') + ' ' + esc(j.major || "Umum") + '</span></div>' +
           (["accepted", "rejected", "withdrawn"].indexOf(a.status) === -1 ?
             '<button class="btn btn-outline btn-sm" data-action="batal-lamaran" data-id="' + a.id + '">Batalkan lamaran</button>' : "") +
           '</div></div></div>';
       }).join("") + '</div>'
-        : '<div class="card">' + empty("📭", "Belum ada lamaran pada filter ini",
+        : '<div class="card">' + empty("inbox", "Belum ada lamaran pada filter ini",
             "Ubah filter status atau kirim lamaran baru.", "#/lowongan", "Cari Lowongan") + '</div>');
   }
 
@@ -594,9 +598,9 @@
       '<p>' + list.length + ' lowongan Anda tandai untuk dilamar nanti.</p></div></div>' +
       (list.length ? '<div class="grid">' + list.map(function (j) {
         return '<div>' + jobCard(j) +
-          '<button class="btn btn-ghost btn-sm mt-1" data-action="toggle-simpan" data-id="' + j.id + '">🗑️ Hapus dari tersimpan</button></div>';
+          '<button class="btn btn-ghost btn-sm mt-1" data-action="toggle-simpan" data-id="' + j.id + '">' + ICON('trash') + ' Hapus dari tersimpan</button></div>';
       }).join("") + '</div>'
-        : '<div class="card">' + empty("🔖", "Belum ada lowongan tersimpan",
+        : '<div class="card">' + empty("bookmark", "Belum ada lowongan tersimpan",
             'Klik "Simpan lowongan" pada halaman detail.', "#/lowongan", "Jelajahi Lowongan") + '</div>');
   }
 
@@ -643,7 +647,7 @@
       '<span>Saya sedang terbuka untuk peluang kerja.</span></label></div>' +
       '<div class="card-foot flex between items-center wrap gap">' +
       '<small class="muted">Perubahan langsung berlaku pada lamaran berikutnya.</small>' +
-      '<button class="btn btn-primary" type="submit">💾 Simpan Profil</button></div></div></form>';
+      '<button class="btn btn-primary" type="submit">' + ICON('save') + ' Simpan Profil</button></div></div></form>';
   }
 
   // ── Dashboard perusahaan ────────────────────────────────────────────────
@@ -664,8 +668,8 @@
 
     return '<div class="page-head"><div><h1>' + esc(c.name) + '</h1>' +
       '<p>Ringkasan rekrutmen melalui BKK ' + SEKOLAH + '.</p></div>' +
-      '<a href="#/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a></div>' +
-      (c.status !== "verified" ? '<div class="alert alert-warning mb-3"><span>⏳</span><span>Status akun: <b>' +
+      '<a href="#/perusahaan/lowongan/baru" class="btn btn-primary">' + ICON('plus') + ' Pasang Lowongan</a></div>' +
+      (c.status !== "verified" ? '<div class="alert alert-warning mb-3"><span>' + ICON('clock') + '</span><span>Status akun: <b>' +
         esc(DB.companyStatus[c.status]) + '</b>. ' + esc(c.note || "Pengelola BKK sedang memverifikasi data perusahaan Anda.") +
         '</span></div>' : "") +
       '<div class="grid grid-4 mb-3">' +
@@ -674,7 +678,7 @@
       statCard("Diterima", byStatus.accepted || 0, "", "ok") +
       statCard("Total dilihat", views, "akumulasi semua lowongan", "warn") + '</div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Pelamar terbaru</h2>' +
-      '<a href="#/perusahaan/pelamar" class="btn btn-ghost btn-sm">Semua pelamar →</a></div>' +
+      '<a href="#/perusahaan/pelamar" class="btn btn-ghost btn-sm">Semua pelamar ' + ICON('arrow-right', 'xs') + '</a></div>' +
       (apps.length ? '<div class="table-wrap"><table class="data"><thead><tr>' +
         '<th>Pelamar</th><th>Posisi dilamar</th><th>Jurusan</th><th>Tanggal</th><th>Status</th><th></th></tr></thead><tbody>' +
         apps.slice(0, 6).map(function (a) {
@@ -686,13 +690,13 @@
             '<td><span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span></td>' +
             '<td class="right"><a class="btn btn-outline btn-sm" href="#/perusahaan/pelamar/' + a.id + '">Tinjau</a></td></tr>';
         }).join("") + '</tbody></table></div>'
-        : empty("👥", "Belum ada pelamar", "Pelamar akan muncul setelah lowongan Anda tayang.")) + '</div>' +
+        : empty("users", "Belum ada pelamar", "Pelamar akan muncul setelah lowongan Anda tayang.")) + '</div>' +
       '<div class="grid grid-2"><div class="card"><div class="card-head"><h2>Lowongan aktif</h2>' +
-      '<a href="#/perusahaan/lowongan" class="btn btn-ghost btn-sm">Kelola →</a></div><div class="card-body">' +
+      '<a href="#/perusahaan/lowongan" class="btn btn-ghost btn-sm">Kelola ' + ICON('arrow-right', 'xs') + '</a></div><div class="card-body">' +
       (tayang.length ? tayang.map(function (j) {
         return '<div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">' +
           '<div style="min-width:0"><div class="cell-main truncate"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></div>' +
-          '<div class="cell-sub">📍 ' + esc(j.location) + ' · ⏳ ' + (j.deadline ? tgl(j.deadline) : "tanpa batas") + '</div></div>' +
+          '<div class="cell-sub">' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('clock') + ' ' + (j.deadline ? tgl(j.deadline) : "tanpa batas") + '</div></div>' +
           '<span class="badge info nowrap">' + appsOfJob(j.id).length + ' pelamar</span></div>';
       }).join("") : '<p class="muted center">Belum ada lowongan tayang.</p>') + '</div></div>' +
       '<div class="card"><div class="card-head"><h2>Corong seleksi</h2></div><div class="card-body">' +
@@ -713,13 +717,13 @@
       }));
 
     return '<div class="page-head"><div><h1>Lowongan Saya</h1><p>' + jobs.length + ' lowongan pada filter ini.</p></div>' +
-      '<a href="#/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a></div>' + tabs(items, f) +
+      '<a href="#/perusahaan/lowongan/baru" class="btn btn-primary">' + ICON('plus') + ' Pasang Lowongan</a></div>' + tabs(items, f) +
       (jobs.length ? '<div class="card"><div class="table-wrap"><table class="data"><thead><tr>' +
         '<th>Lowongan</th><th>Tipe</th><th>Kuota</th><th>Pelamar</th><th>Batas</th><th>Status</th><th></th></tr></thead><tbody>' +
         jobs.map(function (j) {
           return '<tr><td><div class="cell-main"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></div>' +
-            '<div class="cell-sub">📍 ' + esc(j.location) + ' · 🎓 ' + esc(j.major || "Umum") + ' · 👁️ ' + (j.views || 0) + '</div>' +
-            (j.reviewNote ? '<div class="cell-sub" style="color:var(--danger-700)">💬 ' + esc(j.reviewNote) + '</div>' : "") + '</td>' +
+            '<div class="cell-sub">' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(j.major || "Umum") + ' · ' + ICON('eye') + ' ' + (j.views || 0) + '</div>' +
+            (j.reviewNote ? '<div class="cell-sub" style="color:var(--danger-700)">' + ICON('message') + ' ' + esc(j.reviewNote) + '</div>' : "") + '</td>' +
             '<td class="cell-sub nowrap">' + esc(DB.employment[j.type]) + '</td><td>' + j.quota + '</td>' +
             '<td><span class="badge info">' + appsOfJob(j.id).length + '</span></td>' +
             '<td class="cell-sub nowrap">' + (j.deadline ? tgl(j.deadline) : "—") +
@@ -732,7 +736,7 @@
                 ? '<button class="btn btn-ghost btn-sm" data-action="hapus-lowongan" data-id="' + j.id + '">Hapus</button>' : "")) +
             '</div></td></tr>';
         }).join("") + '</tbody></table></div></div>'
-        : '<div class="card">' + empty("📋", "Belum ada lowongan", "Buat lowongan pertama Anda.",
+        : '<div class="card">' + empty("clipboard", "Belum ada lowongan", "Buat lowongan pertama Anda.",
             "#/perusahaan/lowongan/baru", "Pasang Lowongan") + '</div>');
   }
 
@@ -780,8 +784,8 @@
       '<span>Sembunyikan nominal gaji (tampilkan sebagai "Negosiasi").</span></label></div>' +
       '<div class="card-foot flex between items-center wrap gap">' +
       '<a href="#/perusahaan/lowongan" class="btn btn-ghost">Batal</a>' +
-      '<div class="btn-group"><button class="btn btn-outline" type="submit" name="aksi" value="draft">💾 Simpan sebagai draf</button>' +
-      '<button class="btn btn-primary" type="submit" name="aksi" value="submit">📤 Kirim untuk ditinjau</button></div>' +
+      '<div class="btn-group"><button class="btn btn-outline" type="submit" name="aksi" value="draft">' + ICON('save') + ' Simpan sebagai draf</button>' +
+      '<button class="btn btn-primary" type="submit" name="aksi" value="submit">' + ICON('send') + ' Kirim untuk ditinjau</button></div>' +
       '</div></div></form>';
   }
 
@@ -818,14 +822,14 @@
           '<div style="min-width:0;flex:1"><h3 class="truncate" style="margin:0">' + esc(su.name) + '</h3>' +
           '<div class="cell-sub truncate">' + esc(s.headline || s.major) + '</div>' +
           '<span class="badge ' + BADGE_APP[a.status] + ' mt-1">' + esc(DB.appStatus[a.status]) + '</span></div></div>' +
-          '<div class="job-meta"><span>📋 ' + esc(j.title) + '</span><span>🎓 ' + esc(s.major) + '</span>' +
-          '<span>🗓️ Lulus ' + s.grad + '</span><span>📍 ' + esc(s.city) + '</span></div>' +
+          '<div class="job-meta"><span>' + ICON('clipboard') + ' ' + esc(j.title) + '</span><span>' + ICON('cap') + ' ' + esc(s.major) + '</span>' +
+          '<span>' + ICON('calendar') + ' Lulus ' + s.grad + '</span><span>' + ICON('pin') + ' ' + esc(s.city) + '</span></div>' +
           '<div class="chips mt-1">' + skills.slice(0, 4).map(function (x) { return '<span class="chip">' + esc(x) + '</span>'; }).join("") +
           (skills.length > 4 ? '<span class="chip">+' + (skills.length - 4) + '</span>' : "") + '</div>' +
           '<div class="job-foot"><small class="muted">Melamar ' + tgl(a.created) + '</small>' +
-          '<a class="btn btn-primary btn-sm" href="#/perusahaan/pelamar/' + a.id + '">Tinjau →</a></div></div></div>';
+          '<a class="btn btn-primary btn-sm" href="#/perusahaan/pelamar/' + a.id + '">Tinjau ' + ICON('arrow-right', 'xs') + '</a></div></div></div>';
       }).join("") + '</div>'
-        : '<div class="card">' + empty("👥", "Belum ada pelamar pada filter ini", "Ubah filter pencarian.") + '</div>');
+        : '<div class="card">' + empty("users", "Belum ada pelamar pada filter ini", "Ubah filter pencarian.") + '</div>');
   }
 
   function pageCompanyPelamarDetail(id) {
@@ -846,13 +850,13 @@
       '<div style="flex:1;min-width:220px"><h1 style="margin-bottom:.15rem">' + esc(su.name) + '</h1>' +
       '<p class="muted mb-1">' + esc(s.headline) + '</p><div class="chips">' +
       '<span class="badge ' + BADGE_APP[a.status] + '">' + esc(DB.appStatus[a.status]) + '</span>' +
-      '<span class="chip">🎓 ' + esc(s.major) + '</span><span class="chip">🗓️ Lulus ' + s.grad + '</span>' +
+      '<span class="chip">' + ICON('cap') + ' ' + esc(s.major) + '</span><span class="chip">' + ICON('calendar') + ' Lulus ' + s.grad + '</span>' +
       (s.openToWork ? '<span class="badge ok">Terbuka untuk kerja</span>' : "") + '</div></div>' +
-      (s.cv ? '<span class="btn btn-outline">📄 CV tersedia</span>' : '<span class="badge muted">Belum unggah CV</span>') + '</div></div>' +
+      (s.cv ? '<span class="btn btn-outline">' + ICON('file') + ' CV tersedia</span>' : '<span class="badge muted">Belum unggah CV</span>') + '</div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Melamar untuk</h2></div><div class="card-body">' +
       '<h3><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a></h3>' +
-      '<div class="job-meta"><span>📍 ' + esc(j.location) + '</span><span>💼 ' + esc(DB.employment[j.type]) + '</span>' +
-      '<span>🕒 Dilamar ' + tgl(a.created) + '</span></div>' +
+      '<div class="job-meta"><span>' + ICON('pin') + ' ' + esc(j.location) + '</span><span>' + ICON('briefcase') + ' ' + esc(DB.employment[j.type]) + '</span>' +
+      '<span>' + ICON('history') + ' Dilamar ' + tgl(a.created) + '</span></div>' +
       (a.cover ? '<div class="divider"></div><h4>Surat lamaran</h4><div class="prose">' + nl2br(a.cover) + '</div>' : "") +
       '</div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Profil Kandidat</h2></div><div class="card-body">' +
@@ -895,7 +899,7 @@
     return '<div class="page-head"><div><h1>Profil Perusahaan</h1>' +
       '<p>Informasi ini tampil pada halaman mitra dan setiap lowongan Anda.</p></div>' +
       '<span class="badge ' + BADGE_CO[c.status] + '">' + esc(DB.companyStatus[c.status]) + '</span></div>' +
-      (c.note ? '<div class="alert alert-info mb-3"><span>💬</span><span>Catatan admin BKK: ' + esc(c.note) + '</span></div>' : "") +
+      (c.note ? '<div class="alert alert-info mb-3"><span>' + ICON('message') + '</span><span>Catatan admin BKK: ' + esc(c.note) + '</span></div>' : "") +
       '<form data-form="profil-perusahaan">' +
       '<div class="card mb-3"><div class="card-head"><h2>Identitas Perusahaan</h2></div><div class="card-body">' +
       '<div class="flex gap items-center wrap mb-3"><div class="logo-box" style="width:96px;height:96px;font-size:1.5rem">' +
@@ -911,9 +915,9 @@
       '<div class="form-row-3">' + fld("Nama PIC", "pic", c.pic) + fld("Telepon", "phone", c.phone, "tel") +
       fld("Situs web", "website", c.website, "url") + '</div></div>' +
       '<div class="card-foot flex between items-center wrap gap">' +
-      (c.status === "verified" ? '<a href="#/mitra/' + esc(c.slug) + '" class="btn btn-ghost">👁️ Lihat halaman publik</a>'
+      (c.status === "verified" ? '<a href="#/mitra/' + esc(c.slug) + '" class="btn btn-ghost">' + ICON('eye') + ' Lihat halaman publik</a>'
         : '<small class="muted">Halaman publik aktif setelah akun terverifikasi.</small>') +
-      '<button class="btn btn-primary" type="submit">💾 Simpan Profil</button></div></div></form>';
+      '<button class="btn btn-primary" type="submit">' + ICON('save') + ' Simpan Profil</button></div></div></form>';
   }
 
   // ── Panel admin ─────────────────────────────────────────────────────────
@@ -939,9 +943,9 @@
 
     return '<div class="page-head"><div><h1>Panel Pemantauan BKK</h1>' +
       '<p>Ringkasan seluruh aktivitas portal bursa kerja sekolah.</p></div>' +
-      '<div class="btn-group"><a href="#/admin/laporan" class="btn btn-outline">📊 Laporan</a>' +
-      '<button class="btn btn-primary" data-action="ekspor" data-jenis="lamaran">⬇️ Ekspor CSV</button></div></div>' +
-      (pendingCo.length || pendingJob.length ? '<div class="alert alert-warning mb-3"><span>⏳</span><span>Ada <b>' +
+      '<div class="btn-group"><a href="#/admin/laporan" class="btn btn-outline">' + ICON('chart') + ' Laporan</a>' +
+      '<button class="btn btn-primary" data-action="ekspor" data-jenis="lamaran">' + ICON('download') + ' Ekspor CSV</button></div></div>' +
+      (pendingCo.length || pendingJob.length ? '<div class="alert alert-warning mb-3"><span>' + ICON('clock') + '</span><span>Ada <b>' +
         pendingCo.length + '</b> perusahaan dan <b>' + pendingJob.length + '</b> lowongan menunggu tindakan Anda. ' +
         '<a href="#/admin/perusahaan?status=pending">Verifikasi perusahaan</a> · ' +
         '<a href="#/admin/lowongan?status=pending">Tinjau lowongan</a></span></div>' : "") +
@@ -955,21 +959,21 @@
                diterima + " dari " + lamaran + " lamaran", "warn") + '</div>' +
       '<div class="grid grid-2 mb-3">' +
       '<div class="card"><div class="card-head"><h2>Antrean verifikasi perusahaan</h2>' +
-      '<a href="#/admin/perusahaan?status=pending" class="btn btn-ghost btn-sm">Semua →</a></div><div class="card-body">' +
+      '<a href="#/admin/perusahaan?status=pending" class="btn btn-ghost btn-sm">Semua ' + ICON('arrow-right', 'xs') + '</a></div><div class="card-body">' +
       (pendingCo.length ? pendingCo.map(function (c) {
         return '<div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">' +
           '<div style="min-width:0"><div class="cell-main truncate">' + esc(c.name) + '</div>' +
           '<div class="cell-sub">' + esc(c.industry) + ' · ' + esc(c.city) + ' · ' + tgl(c.joined) + '</div></div>' +
           '<button class="btn btn-ok btn-sm" data-action="verif-perusahaan" data-id="' + c.id + '" data-status="verified">Verifikasi</button></div>';
-      }).join("") : '<p class="muted center mb-0">Tidak ada antrean. 🎉</p>') + '</div></div>' +
+      }).join("") : '<p class="muted center mb-0">Tidak ada antrean. ' + ICON('check-circle') + '</p>') + '</div></div>' +
       '<div class="card"><div class="card-head"><h2>Lowongan menunggu persetujuan</h2>' +
-      '<a href="#/admin/lowongan?status=pending" class="btn btn-ghost btn-sm">Semua →</a></div><div class="card-body">' +
+      '<a href="#/admin/lowongan?status=pending" class="btn btn-ghost btn-sm">Semua ' + ICON('arrow-right', 'xs') + '</a></div><div class="card-body">' +
       (pendingJob.length ? pendingJob.map(function (j) {
         return '<div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">' +
           '<div style="min-width:0"><div class="cell-main truncate">' + esc(j.title) + '</div>' +
-          '<div class="cell-sub">' + esc(company(j.companyId).name) + ' · 📍 ' + esc(j.location) + '</div></div>' +
+          '<div class="cell-sub">' + esc(company(j.companyId).name) + ' · ' + ICON('pin') + ' ' + esc(j.location) + '</div></div>' +
           '<button class="btn btn-ok btn-sm" data-action="moderasi-lowongan" data-id="' + j.id + '" data-status="published">Setujui</button></div>';
-      }).join("") : '<p class="muted center mb-0">Tidak ada antrean. 🎉</p>') + '</div></div></div>' +
+      }).join("") : '<p class="muted center mb-0">Tidak ada antrean. ' + ICON('check-circle') + '</p>') + '</div></div></div>' +
       '<div class="grid grid-2 mb-3">' +
       '<div class="card"><div class="card-head"><h2>Tren lamaran masuk</h2><span class="badge muted">6 bulan terakhir</span></div>' +
       '<div class="card-body"><div class="bars">' + bulanKeys.map(function (k) {
@@ -985,7 +989,7 @@
           '<span class="tiny muted right">' + perJurusan[k] + ' lowongan</span></div>';
       }).join("") + '</div></div></div>' +
       '<div class="card"><div class="card-head"><h2>Aktivitas terakhir</h2>' +
-      '<a href="#/admin/log" class="btn btn-ghost btn-sm">Semua log →</a></div>' +
+      '<a href="#/admin/log" class="btn btn-ghost btn-sm">Semua log ' + ICON('arrow-right', 'xs') + '</a></div>' +
       '<div class="table-wrap"><table class="data"><thead><tr><th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Keterangan</th></tr></thead><tbody>' +
       DB.logs.slice(0, 6).map(function (l) {
         return '<tr><td class="nowrap cell-sub">' + tglJam(l.at) + '</td><td>' + esc(l.actor) + '</td>' +
@@ -1002,7 +1006,7 @@
       }));
 
     return '<div class="page-head"><div><h1>Kelola Perusahaan</h1><p>' + list.length + ' perusahaan pada filter ini.</p></div>' +
-      '<button class="btn btn-outline" data-action="ekspor" data-jenis="perusahaan">⬇️ Ekspor CSV</button></div>' + tabs(items, f) +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="perusahaan">' + ICON('download') + ' Ekspor CSV</button></div>' + tabs(items, f) +
       '<div class="grid">' + list.map(function (c) {
         var n = DB.jobs.filter(function (j) { return j.companyId === c.id; }).length;
         var cu = DB.users.find(function (u) { return u.companyId === c.id; });
@@ -1010,12 +1014,12 @@
           '<div class="flex gap items-center wrap"><div class="logo-box">' + esc(inisial(c.name)) + '</div>' +
           '<div style="flex:1;min-width:220px"><h3 style="margin-bottom:.15rem">' + esc(c.name) +
           ' <span class="badge ' + BADGE_CO[c.status] + '">' + esc(DB.companyStatus[c.status]) + '</span></h3>' +
-          '<div class="cell-sub">🏭 ' + esc(c.industry) + ' · 📍 ' + esc(c.city) + ' · 👤 ' + esc(c.pic) + '</div>' +
-          '<div class="cell-sub">✉️ ' + esc(cu ? cu.email : "-") + ' · ☎️ ' + esc(c.phone) +
-          ' · 📋 ' + n + ' lowongan · 🕒 daftar ' + tgl(c.joined) + '</div>' +
-          (c.note ? '<div class="cell-sub" style="color:var(--warn-700)">💬 ' + esc(c.note) + '</div>' : "") +
+          '<div class="cell-sub">' + ICON('factory') + ' ' + esc(c.industry) + ' · ' + ICON('pin') + ' ' + esc(c.city) + ' · ' + ICON('user') + ' ' + esc(c.pic) + '</div>' +
+          '<div class="cell-sub">' + ICON('mail') + ' ' + esc(cu ? cu.email : "-") + ' · ' + ICON('phone') + ' ' + esc(c.phone) +
+          ' · ' + ICON('clipboard') + ' ' + n + ' lowongan · ' + ICON('history') + ' daftar ' + tgl(c.joined) + '</div>' +
+          (c.note ? '<div class="cell-sub" style="color:var(--warn-700)">' + ICON('message') + ' ' + esc(c.note) + '</div>' : "") +
           '</div></div><div class="job-foot"><div class="chips">' +
-          (c.status === "verified" ? '<a class="chip" href="#/mitra/' + esc(c.slug) + '">👁️ Halaman publik</a>' : "") +
+          (c.status === "verified" ? '<a class="chip" href="#/mitra/' + esc(c.slug) + '">' + ICON('eye') + ' Halaman publik</a>' : "") +
           '</div><form class="flex gap-sm wrap items-center" data-form="verif-perusahaan" data-id="' + c.id + '">' +
           '<input type="text" name="note" placeholder="Catatan verifikasi" value="' + esc(c.note || "") + '" style="width:230px">' +
           '<select name="status" style="width:auto">' + Object.keys(DB.companyStatus).map(function (k) {
@@ -1034,16 +1038,16 @@
       }));
 
     return '<div class="page-head"><div><h1>Moderasi Lowongan</h1><p>' + list.length + ' lowongan pada filter ini.</p></div>' +
-      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lowongan">⬇️ Ekspor CSV</button></div>' + tabs(items, f) +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lowongan">' + ICON('download') + ' Ekspor CSV</button></div>' + tabs(items, f) +
       '<div class="grid">' + list.map(function (j) {
         var c = company(j.companyId);
         return '<div class="card"><div class="card-body">' +
           '<h3 style="margin-bottom:.15rem"><a href="#/lowongan/' + esc(j.slug) + '">' + esc(j.title) + '</a> ' +
           '<span class="badge ' + BADGE_JOB[j.status] + '">' + esc(DB.jobStatus[j.status]) + '</span></h3>' +
-          '<div class="cell-sub">🏢 ' + esc(c.name) + ' · 📍 ' + esc(j.location) + ' · 🎓 ' + esc(j.major || "Umum") + '</div>' +
-          '<div class="cell-sub">💰 ' + esc(gaji(j)) + ' · 👥 ' + j.quota + ' orang · 📨 ' + appsOfJob(j.id).length +
-          ' pelamar · 👁️ ' + (j.views || 0) + ' · ⏳ ' + (j.deadline ? tgl(j.deadline) : "tanpa batas") + '</div>' +
-          (j.reviewNote ? '<div class="cell-sub" style="color:var(--warn-700)">💬 ' + esc(j.reviewNote) + '</div>' : "") +
+          '<div class="cell-sub">' + ICON('building') + ' ' + esc(c.name) + ' · ' + ICON('pin') + ' ' + esc(j.location) + ' · ' + ICON('cap') + ' ' + esc(j.major || "Umum") + '</div>' +
+          '<div class="cell-sub">' + ICON('money') + ' ' + esc(gaji(j)) + ' · ' + ICON('users') + ' ' + j.quota + ' orang · ' + ICON('inbox') + ' ' + appsOfJob(j.id).length +
+          ' pelamar · ' + ICON('eye') + ' ' + (j.views || 0) + ' · ' + ICON('clock') + ' ' + (j.deadline ? tgl(j.deadline) : "tanpa batas") + '</div>' +
+          (j.reviewNote ? '<div class="cell-sub" style="color:var(--warn-700)">' + ICON('message') + ' ' + esc(j.reviewNote) + '</div>' : "") +
           '<div class="job-foot"><a class="btn btn-outline btn-sm" href="#/lowongan/' + esc(j.slug) + '">Tinjau isi lowongan</a>' +
           '<form class="flex gap-sm wrap items-center" data-form="moderasi-lowongan" data-id="' + j.id + '">' +
           '<input type="text" name="note" placeholder="Catatan untuk perusahaan" value="' + esc(j.reviewNote || "") + '" style="width:220px">' +
@@ -1064,7 +1068,7 @@
       }));
 
     return '<div class="page-head"><div><h1>Pemantauan Lamaran</h1><p>' + list.length + ' lamaran pada filter ini.</p></div>' +
-      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">⬇️ Ekspor CSV</button></div>' + tabs(items, f) +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">' + ICON('download') + ' Ekspor CSV</button></div>' + tabs(items, f) +
       '<div class="card"><div class="table-wrap"><table class="data"><thead><tr>' +
       '<th>Pelamar</th><th>Jurusan</th><th>Lowongan</th><th>Perusahaan</th><th>Tanggal</th><th>Status</th></tr></thead><tbody>' +
       (list.length ? list.map(function (a) {
@@ -1146,9 +1150,9 @@
 
     return '<div class="page-head"><div><h1>Laporan &amp; Rekap Penyaluran</h1>' +
       '<p>Bahan pelaporan BKK ke sekolah dan dinas terkait.</p></div>' +
-      '<div class="btn-group"><button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">⬇️ Lamaran</button>' +
-      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lowongan">⬇️ Lowongan</button>' +
-      '<button class="btn btn-primary" data-action="cetak">🖨️ Cetak</button></div></div>' +
+      '<div class="btn-group"><button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">' + ICON('download') + ' Lamaran</button>' +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lowongan">' + ICON('download') + ' Lowongan</button>' +
+      '<button class="btn btn-primary" data-action="cetak">' + ICON('printer') + ' Cetak</button></div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Lamaran per bulan — tahun 2026</h2></div>' +
       '<div class="card-body"><div class="bars">' +
       namaBulan.map(function (nm, i) {
@@ -1184,7 +1188,7 @@
       '<textarea name="body" required maxlength="2000" style="min-height:120px"></textarea></div>' +
       '<label class="check mb-2"><input type="checkbox" name="published" checked>' +
       '<span>Tampilkan di beranda portal.</span></label>' +
-      '<button class="btn btn-primary" type="submit">📢 Terbitkan</button></form></div></div>' +
+      '<button class="btn btn-primary" type="submit">' + ICON('megaphone') + ' Terbitkan</button></form></div></div>' +
       '<div class="card"><div class="card-head"><h2>Daftar pengumuman (' + DB.announcements.length + ')</h2></div>' +
       '<div class="card-body">' + (DB.announcements.length ? DB.announcements.map(function (a) {
         return '<div style="padding:.85rem 0;border-bottom:1px solid var(--line)">' +
@@ -1197,7 +1201,7 @@
           (a.published ? "Arsipkan" : "Tayangkan") + '</button>' +
           '<button class="btn btn-ghost btn-sm" data-action="hapus-pengumuman" data-id="' + a.id + '">Hapus</button>' +
           '</div></div></div>';
-      }).join("") : empty("📢", "Belum ada pengumuman", "Buat pengumuman pertama pada formulir di atas.")) + '</div></div>';
+      }).join("") : empty("megaphone", "Belum ada pengumuman", "Buat pengumuman pertama pada formulir di atas.")) + '</div></div>';
   }
 
   function pageAdminLog() {
@@ -1224,7 +1228,7 @@
       var home = u.role === "admin" ? "#/admin" : u.role === "company" ? "#/perusahaan" : "#/pelamar";
       var nama = u.role === "company" ? company(u.companyId).name : u.name;
       akun = '<a href="' + home + '" class="btn btn-outline btn-sm">' +
-        (u.role === "admin" ? "🛡️" : u.role === "company" ? "🏢" : "🎯") + ' Dashboard</a>' +
+        ICON(u.role === "admin" ? "shield" : u.role === "company" ? "building" : "target") + ' Dashboard</a>' +
         '<span class="avatar" title="' + esc(nama) + '">' + esc(inisial(nama)) + '</span>' +
         '<button class="btn btn-ghost btn-sm" data-action="logout">Keluar</button>';
     } else {
@@ -1232,8 +1236,8 @@
     }
 
     return '<div class="topbar"><div class="container">' +
-      '<span>📍 ' + SEKOLAH + ' — Jl. AKBP. R. Agil Kusumadya No.1, Pati, Jawa Tengah</span>' +
-      '<span>✉️ bkk@smkn1pati.sch.id · ☎️ (0295) 381768</span></div></div>' +
+      '<span>' + ICON('pin') + ' ' + SEKOLAH + ' — Jl. AKBP. R. Agil Kusumadya No.1, Pati, Jawa Tengah</span>' +
+      '<span>' + ICON('mail') + ' bkk@smkn1pati.sch.id · ' + ICON('phone') + ' (0295) 381768</span></div></div>' +
       '<header class="navbar"><div class="container">' +
       '<a href="#/" class="brand"><span class="brand-mark">BKK</span>' +
       '<span class="brand-text"><b>Bursa Kerja Khusus</b><span>' + SEKOLAH + '</span></span></a>' +
@@ -1246,14 +1250,14 @@
   function demoBar() {
     var u = user();
     return '<div class="demo-bar"><div class="container">' +
-      '<span>🧪 <b>Mode Demo GitHub Pages</b> — data disimpan di peramban Anda, bukan di server. ' +
+      '<span>' + ICON('info') + ' <b>Mode Demo GitHub Pages</b> — data disimpan di peramban Anda, bukan di server. ' +
       'Versi produksi berjalan di FastAPI + PostgreSQL.</span>' +
       '<span class="role-switch">' +
       [[1, "Admin"], [2, "Perusahaan"], [10, "Pencari Kerja"]].map(function (r) {
         return '<button data-action="login" data-id="' + r[0] + '" class="' +
           (u && u.id === r[0] ? "active" : "") + '">' + r[1] + '</button>';
       }).join("") +
-      '<button data-action="reset">↺ Reset data</button></span></div></div>';
+      '<button data-action="reset">' + ICON('history', 'xs') + ' Reset data</button></span></div></div>';
   }
 
   function footer() {
@@ -1340,8 +1344,8 @@
     var flashes = takeFlash();
     var alerts = flashes.length ? '<div class="flash-wrap"><div class="container mt-2">' +
       flashes.map(function (f) {
-        var ico = { success: "✅", danger: "⛔", warning: "⚠️", info: "ℹ️" }[f.category] || "ℹ️";
-        return '<div class="alert alert-' + f.category + '"><span>' + ico + '</span><span>' + esc(f.message) + '</span></div>';
+        var ico = { success: "verified", danger: "alert", warning: "warning", info: "info" }[f.category] || "info";
+        return '<div class="alert alert-' + f.category + '"><span>' + ICON(ico, "md") + '</span><span>' + esc(f.message) + '</span></div>';
       }).join("") + '</div></div>' : "";
 
     document.getElementById("app").innerHTML =
@@ -1446,20 +1450,20 @@
     }
     if (act === "verif-perusahaan") {
       var c = company(id); c.status = el.getAttribute("data-status"); c.note = null;
-      addLog("verify_company", c.name + " → " + c.status);
+      addLog("verify_company", c.name + " ' + ICON('arrow-right', 'xs') + ' " + c.status);
       save(); flash("Status " + c.name + " diperbarui.", "success"); render(); return;
     }
     if (act === "moderasi-lowongan") {
       var mj = job(id); mj.status = el.getAttribute("data-status");
       if (mj.status === "published" && !mj.published) mj.published = "2026-08-26";
-      addLog("moderate_job", "'" + mj.title + "' → " + mj.status);
+      addLog("moderate_job", "'" + mj.title + "' ' + ICON('arrow-right', 'xs') + ' " + mj.status);
       save(); flash("Lowongan '" + mj.title + "' diperbarui.", "success"); render(); return;
     }
     if (act === "toggle-user") {
       var tu = DB.users.find(function (x) { return x.id === id; });
       if (session && tu.id === session.userId) { flash("Anda tidak dapat menonaktifkan akun sendiri.", "warning"); render(); return; }
       tu.active = !tu.active;
-      addLog("toggle_user", tu.email + " → " + (tu.active ? "aktif" : "nonaktif"));
+      addLog("toggle_user", tu.email + " ' + ICON('arrow-right', 'xs') + ' " + (tu.active ? "aktif" : "nonaktif"));
       save(); flash("Akun " + tu.email + " kini " + (tu.active ? "aktif" : "nonaktif") + ".", "success"); render(); return;
     }
     if (act === "toggle-pengumuman") {
@@ -1557,7 +1561,7 @@
       a.note = val("note") || null;
       a.interview = val("interview") ? val("interview").replace("T", " ") : null;
       a.updated = "2026-08-26";
-      addLog("update_application", "Status lamaran #" + a.id + " → " + a.status);
+      addLog("update_application", "Status lamaran #" + a.id + " ' + ICON('arrow-right', 'xs') + ' " + a.status);
       save(); flash("Status pelamar diperbarui.", "success"); render(); return;
     }
 
@@ -1572,7 +1576,7 @@
     if (kind === "verif-perusahaan") {
       var vc = company(id);
       vc.status = val("status"); vc.note = val("note") || null;
-      addLog("verify_company", vc.name + " → " + vc.status);
+      addLog("verify_company", vc.name + " ' + ICON('arrow-right', 'xs') + ' " + vc.status);
       save(); flash("Status " + vc.name + " diperbarui menjadi " + DB.companyStatus[vc.status] + ".", "success");
       render(); return;
     }
@@ -1581,7 +1585,7 @@
       var mj2 = job(id);
       mj2.status = val("status"); mj2.reviewNote = val("note") || null;
       if (mj2.status === "published" && !mj2.published) mj2.published = "2026-08-26";
-      addLog("moderate_job", "'" + mj2.title + "' → " + mj2.status);
+      addLog("moderate_job", "'" + mj2.title + "' ' + ICON('arrow-right', 'xs') + ' " + mj2.status);
       save(); flash("Lowongan '" + mj2.title + "' diperbarui.", "success"); render(); return;
     }
 

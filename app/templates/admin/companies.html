@@ -5,7 +5,7 @@
 {% block main %}
 <div class="page-head">
   <div><h1>Kelola Perusahaan</h1><p>{{ meta.total }} perusahaan terdaftar di portal.</p></div>
-  <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">⬇️ Ekspor CSV</a>
+  <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">{{ icon('download') }} Ekspor CSV</a>
 </div>
 
 <div class="tabs">
@@ -43,20 +43,20 @@
             <span class="badge {{ c.status | badge_perusahaan }}">{{ c.status | label_status_perusahaan }}</span>
           </h3>
           <div class="cell-sub">
-            🏭 {{ c.industry or '-' }} · 📍 {{ c.city or '-' }} · 👤 {{ c.contact_person or '-' }}
+            {{ icon('factory') }} {{ c.industry or '-' }} · {{ icon('pin') }} {{ c.city or '-' }} · {{ icon('user') }} {{ c.contact_person or '-' }}
           </div>
           <div class="cell-sub">
-            ✉️ {{ c.user.email if c.user else '-' }} · ☎️ {{ c.phone or '-' }} ·
-            📋 {{ counts.get(c.id, 0) }} lowongan · 🕒 daftar {{ c.created_at | tanggal }}
+            {{ icon('mail') }} {{ c.user.email if c.user else '-' }} · {{ icon('phone') }} {{ c.phone or '-' }} ·
+            {{ icon('clipboard') }} {{ counts.get(c.id, 0) }} lowongan · {{ icon('history') }} daftar {{ c.created_at | tanggal }}
           </div>
-          {% if c.verification_note %}<div class="cell-sub" style="color:var(--warn-700)">💬 {{ c.verification_note }}</div>{% endif %}
+          {% if c.verification_note %}<div class="cell-sub" style="color:var(--warn-700)">{{ icon('message') }} {{ c.verification_note }}</div>{% endif %}
         </div>
       </div>
 
       <div class="job-foot">
         <div class="chips">
-          {% if c.is_verified %}<a class="chip" href="/perusahaan-mitra/{{ c.slug }}" target="_blank">👁️ Halaman publik</a>{% endif %}
-          <a class="chip" href="/admin/lowongan?q={{ c.name | urlencode }}">📋 Lowongan perusahaan</a>
+          {% if c.is_verified %}<a class="chip" href="/perusahaan-mitra/{{ c.slug }}" target="_blank">{{ icon('eye') }} Halaman publik</a>{% endif %}
+          <a class="chip" href="/admin/lowongan?q={{ c.name | urlencode }}">{{ icon('clipboard') }} Lowongan perusahaan</a>
         </div>
         <form method="post" action="/admin/perusahaan/{{ c.id }}/status" class="flex gap-sm wrap items-center">
           <input type="text" name="note" placeholder="Catatan verifikasi (opsional)" value="{{ c.verification_note or '' }}"
@@ -77,7 +77,7 @@
 {% include "partials/pagination.html" %}
 {% else %}
 <div class="card">
-  {% with ico='🏢', judul='Tidak ada perusahaan', pesan='Belum ada data pada filter ini.' %}
+  {% with ico='building', judul='Tidak ada perusahaan', pesan='Belum ada data pada filter ini.' %}
     {% include "partials/empty.html" %}
   {% endwith %}
 </div>

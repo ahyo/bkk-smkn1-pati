@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Gaya khusus demo GitHub Pages.
+
+   Dipisah dari style.css — berkas itu disalin apa adanya dari aplikasi oleh
+   scripts/build_demo_assets.py, sehingga apa pun yang ditaruh di sana akan
+   tertimpa pada sinkronisasi berikutnya.
+   ========================================================================== */
+
+.demo-bar{
+  background:var(--brand-900);color:#c6d6ea;
+  font-size:.8rem;padding:.55rem 0;font-weight:500
+}
+.demo-bar .container{display:flex;gap:1.25rem;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.demo-bar b{color:#fff;font-weight:600}
+.demo-bar .icon{color:var(--accent-500);vertical-align:-.18em}
+
+.role-switch{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+.role-switch button{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:6px;
+  padding:.28rem .7rem;font:inherit;font-size:.76rem;font-weight:600;cursor:pointer;
+  color:#dce7f4;transition:background .15s,border-color .15s,color .15s;
+  display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap
+}
+.role-switch button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+.role-switch button.active{background:var(--brand-500);border-color:var(--brand-500);color:#fff}
+.role-switch button .icon{color:currentColor}
+
+@media (max-width:768px){
+  .demo-bar .container{justify-content:flex-start}
+  .demo-bar span:first-child{font-size:.76rem}
+}

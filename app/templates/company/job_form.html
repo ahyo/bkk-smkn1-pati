@@ -17,7 +17,7 @@
 </div>
 
 {% if job and job.review_note %}
-<div class="alert alert-warning mb-3"><span>💬</span><span>Catatan admin: {{ job.review_note }}</span></div>
+<div class="alert alert-warning mb-3"><span>{{ icon('message') }}</span><span>Catatan admin: {{ job.review_note }}</span></div>
 {% endif %}
 
 <form method="post" action="/perusahaan/lowongan/simpan">
@@ -142,9 +142,10 @@
     <div class="card-foot flex between items-center wrap gap">
       <a href="/perusahaan/lowongan" class="btn btn-ghost">Batal</a>
       <div class="btn-group">
-        <button class="btn btn-outline" type="submit" name="aksi" value="draft">💾 Simpan sebagai draf</button>
+        <button class="btn btn-outline" type="submit" name="aksi" value="draft">{{ icon('save') }} Simpan sebagai draf</button>
         <button class="btn btn-primary" type="submit" name="aksi" value="submit">
-          {{ '📤 Kirim untuk ditinjau' if settings.require_job_approval else '🚀 Tayangkan' }}
+          {% if settings.require_job_approval %}{{ icon('send') }} Kirim untuk ditinjau
+          {% else %}{{ icon('rocket') }} Tayangkan{% endif %}
         </button>
       </div>
     </div>

@@ -24,9 +24,9 @@
           <h3 style="margin-bottom:.15rem"><a href="/lowongan/{{ a.job.slug }}">{{ a.job.title }}</a></h3>
           <div class="job-company">{{ a.job.company.name }}</div>
           <div class="job-meta">
-            <span>📍 {{ a.job.location }}</span>
-            <span>💼 {{ a.job.employment_type | label_kerja }}</span>
-            <span>🕒 Dilamar {{ a.created_at | tanggal }}</span>
+            <span>{{ icon('pin') }} {{ a.job.location }}</span>
+            <span>{{ icon('briefcase') }} {{ a.job.employment_type | label_kerja }}</span>
+            <span>{{ icon('history') }} Dilamar {{ a.created_at | tanggal }}</span>
           </div>
         </div>
         <div class="right">
@@ -36,20 +36,20 @@
       </div>
 
       {% if a.interview_at %}
-        <div class="alert alert-warning mt-2 mb-0"><span>📅</span><span>
+        <div class="alert alert-warning mt-2 mb-0"><span>{{ icon('calendar') }}</span><span>
           Jadwal wawancara: <b>{{ a.interview_at | tanggal_jam }}</b>
         </span></div>
       {% endif %}
       {% if a.company_note %}
-        <div class="alert alert-info mt-2 mb-0"><span>💬</span><span>
+        <div class="alert alert-info mt-2 mb-0"><span>{{ icon('message') }}</span><span>
           Catatan perusahaan: {{ a.company_note }}
         </span></div>
       {% endif %}
 
       <div class="job-foot">
         <div class="chips">
-          {% if a.cv_file %}<a class="chip" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">📄 CV terkirim</a>{% endif %}
-          <span class="chip">🎓 {{ a.job.major_target or 'Umum' }}</span>
+          {% if a.cv_file %}<a class="chip" href="{{ url_for('static', path=a.cv_file) }}" target="_blank">{{ icon('file') }} CV terkirim</a>{% endif %}
+          <span class="chip">{{ icon('cap') }} {{ a.job.major_target or 'Umum' }}</span>
         </div>
         {% if a.status.value not in ['accepted','rejected','withdrawn'] %}
         <form method="post" action="/pelamar/lamaran/{{ a.id }}/batal"
@@ -66,7 +66,7 @@
 {% include "partials/pagination.html" %}
 {% else %}
 <div class="card">
-  {% with ico='📭', judul='Belum ada lamaran pada filter ini',
+  {% with ico='inbox', judul='Belum ada lamaran pada filter ini',
           pesan='Ubah filter status atau kirim lamaran baru.', aksi_url='/lowongan', aksi_label='Cari Lowongan' %}
     {% include "partials/empty.html" %}
   {% endwith %}

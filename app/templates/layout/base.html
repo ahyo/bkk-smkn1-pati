@@ -13,11 +13,11 @@
 
 <div class="topbar">
   <div class="container">
-    <span>📍 {{ settings.school_name }} — {{ settings.school_address }}</span>
+    <span>{{ icon('pin') }} {{ settings.school_name }} — {{ settings.school_address }}</span>
     <span>
-      <a href="mailto:{{ settings.school_email }}">✉️ {{ settings.school_email }}</a>
+      <a href="mailto:{{ settings.school_email }}">{{ icon('mail') }} {{ settings.school_email }}</a>
       &nbsp;·&nbsp;
-      <a href="tel:{{ settings.school_phone }}">☎️ {{ settings.school_phone }}</a>
+      <a href="tel:{{ settings.school_phone }}">{{ icon('phone') }} {{ settings.school_phone }}</a>
     </span>
   </div>
 </div>
@@ -63,19 +63,19 @@
               </span>
             </div>
             {% if current_user.role == Role.ADMIN %}
-              <a href="/admin">🛡️ Dashboard Admin</a>
-              <a href="/admin/laporan">📊 Laporan</a>
+              <a href="/admin">{{ icon('shield') }} Dashboard Admin</a>
+              <a href="/admin/laporan">{{ icon('chart') }} Laporan</a>
             {% elif current_user.role == Role.COMPANY %}
-              <a href="/perusahaan">🏢 Dashboard</a>
-              <a href="/perusahaan/lowongan">📋 Lowongan Saya</a>
-              <a href="/perusahaan/profil">⚙️ Profil Perusahaan</a>
+              <a href="/perusahaan">{{ icon('building') }} Dashboard</a>
+              <a href="/perusahaan/lowongan">{{ icon('clipboard') }} Lowongan Saya</a>
+              <a href="/perusahaan/profil">{{ icon('settings') }} Profil Perusahaan</a>
             {% else %}
-              <a href="/pelamar">🎯 Dashboard</a>
-              <a href="/pelamar/lamaran">📨 Lamaran Saya</a>
-              <a href="/pelamar/profil">👤 Profil & CV</a>
+              <a href="/pelamar">{{ icon('target') }} Dashboard</a>
+              <a href="/pelamar/lamaran">{{ icon('inbox') }} Lamaran Saya</a>
+              <a href="/pelamar/profil">{{ icon('user') }} Profil & CV</a>
             {% endif %}
-            <a href="/akun/kata-sandi">🔑 Ganti Kata Sandi</a>
-            <form method="post" action="/keluar"><button type="submit">🚪 Keluar</button></form>
+            <a href="/akun/kata-sandi">{{ icon('key') }} Ganti Kata Sandi</a>
+            <form method="post" action="/keluar"><button type="submit">{{ icon('logout') }} Keluar</button></form>
           </div>
         </div>
       {% else %}
@@ -92,7 +92,7 @@
   <div class="container mt-2">
     {% for f in flashes %}
       <div class="alert alert-{{ f.category }}">
-        <span>{{ {'success':'✅','danger':'⛔','warning':'⚠️','info':'ℹ️'}.get(f.category,'ℹ️') }}</span>
+        <span>{{ icon({'success':'check-circle','danger':'alert','warning':'warning','info':'info'}.get(f.category,'info'), 'md') }}</span>
         <span>{{ f.message }}</span>
       </div>
     {% endfor %}

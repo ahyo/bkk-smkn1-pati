@@ -15,14 +15,14 @@
       {% include "partials/job_card.html" %}
       <form method="post" action="/pelamar/simpan/{{ job.id }}" class="mt-1">
         <input type="hidden" name="kembali" value="/pelamar/tersimpan">
-        <button class="btn btn-ghost btn-sm" type="submit">🗑️ Hapus dari tersimpan</button>
+        <button class="btn btn-ghost btn-sm" type="submit">{{ icon('trash') }} Hapus dari tersimpan</button>
       </form>
     </div>
   {% endfor %}
 </div>
 {% else %}
 <div class="card">
-  {% with ico='🔖', judul='Belum ada lowongan tersimpan',
+  {% with ico='bookmark', judul='Belum ada lowongan tersimpan',
           pesan='Klik "Simpan lowongan" pada halaman detail untuk menandainya.',
           aksi_url='/lowongan', aksi_label='Jelajahi Lowongan' %}
     {% include "partials/empty.html" %}

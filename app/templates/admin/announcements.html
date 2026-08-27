@@ -23,7 +23,7 @@
         <input type="checkbox" name="is_published" value="1" checked>
         <span>Tampilkan di beranda portal.</span>
       </label>
-      <button class="btn btn-primary" type="submit">📢 Terbitkan</button>
+      <button class="btn btn-primary" type="submit">{{ icon('megaphone') }} Terbitkan</button>
     </form>
   </div>
 </div>
@@ -56,7 +56,7 @@
       </div>
     </div>
     {% else %}
-      {% with ico='📢', judul='Belum ada pengumuman', pesan='Buat pengumuman pertama pada formulir di atas.' %}
+      {% with ico='megaphone', judul='Belum ada pengumuman', pesan='Buat pengumuman pertama pada formulir di atas.' %}
         {% include "partials/empty.html" %}
       {% endwith %}
     {% endfor %}

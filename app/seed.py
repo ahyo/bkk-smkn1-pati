@@ -157,7 +157,7 @@ PENGUMUMAN = [
 
 
 def reset_database() -> None:
-    print("⚠️  Menghapus seluruh tabel…")
+    print("!  Menghapus seluruh tabel…")
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
@@ -179,7 +179,7 @@ def seed() -> None:
         )
         db.add(admin)
         db.flush()
-        print(f"✅ Admin: {admin.email} / {settings.admin_password}")
+        print(f"  ✓ Admin: {admin.email} / {settings.admin_password}")
 
         # ── Perusahaan ─────────────────────────────────────────────────────
         companies: dict[str, Company] = {}
@@ -215,7 +215,7 @@ def seed() -> None:
             db.add(company)
             db.flush()
             companies[nama] = company
-        print(f"✅ {len(companies)} perusahaan (6 terverifikasi, 2 menunggu verifikasi)")
+        print(f"  ✓ {len(companies)} perusahaan (6 terverifikasi, 2 menunggu verifikasi)")
 
         # ── Lowongan ───────────────────────────────────────────────────────
         jobs: list[Job] = []
@@ -253,7 +253,7 @@ def seed() -> None:
             db.add(job)
             db.flush()
             jobs.append(job)
-        print(f"✅ {len(jobs)} lowongan ({terbit} tayang, {len(jobs) - terbit} menunggu persetujuan)")
+        print(f"  ✓ {len(jobs)} lowongan ({terbit} tayang, {len(jobs) - terbit} menunggu persetujuan)")
 
         # ── Pencari kerja ──────────────────────────────────────────────────
         seekers: list[Seeker] = []
@@ -297,7 +297,7 @@ def seed() -> None:
             db.add(seeker)
             db.flush()
             seekers.append(seeker)
-        print(f"✅ {len(seekers)} pencari kerja")
+        print(f"  ✓ {len(seekers)} pencari kerja")
 
         # ── Lamaran ────────────────────────────────────────────────────────
         published = [j for j in jobs if j.status == JobStatus.PUBLISHED]
@@ -347,7 +347,7 @@ def seed() -> None:
                     SavedJob.job_id == job.id, SavedJob.seeker_id == seeker.id
                 ).first():
                     db.add(SavedJob(job_id=job.id, seeker_id=seeker.id))
-        print(f"✅ {jumlah} lamaran + lowongan tersimpan")
+        print(f"  ✓ {jumlah} lamaran + lowongan tersimpan")
 
         # ── Pengumuman & log ───────────────────────────────────────────────
         for i, (judul, isi) in enumerate(PENGUMUMAN):
@@ -368,7 +368,7 @@ def seed() -> None:
         )
 
         db.commit()
-        print("\n🎉 Seed selesai. Kredensial demo:")
+        print("\nSeed selesai. Kredensial demo:")
         print(f"   Admin      : {settings.admin_email} / {settings.admin_password}")
         print(f"   Perusahaan : {list(companies.values())[0].user.email} / Perusahaan#123")
         print(f"   Pelamar    : {seekers[0].user.email} / Pelamar#123")

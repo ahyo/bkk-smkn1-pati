@@ -8,12 +8,12 @@
     <h1>{{ company.name }}</h1>
     <p>Ringkasan rekrutmen melalui BKK {{ settings.school_name }}.</p>
   </div>
-  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">➕ Pasang Lowongan</a>
+  <a href="/perusahaan/lowongan/baru" class="btn btn-primary">{{ icon('plus') }} Pasang Lowongan</a>
 </div>
 
 {% if not company.is_verified %}
 <div class="alert alert-{{ 'danger' if company.status == CompanyStatus.REJECTED else 'warning' }} mb-3">
-  <span>{{ '⛔' if company.status == CompanyStatus.REJECTED else '⏳' }}</span>
+  <span>{{ icon('alert' if company.status == CompanyStatus.REJECTED else 'clock', 'md') }}</span>
   <span>
     Status akun: <b>{{ company.status | label_status_perusahaan }}</b>.
     {% if company.status == CompanyStatus.PENDING %}
@@ -39,7 +39,7 @@
 <div class="card mb-3">
   <div class="card-head">
     <h2>Pelamar terbaru</h2>
-    <a href="/perusahaan/pelamar" class="btn btn-ghost btn-sm">Semua pelamar →</a>
+    <a href="/perusahaan/pelamar" class="btn btn-ghost btn-sm">Semua pelamar {{ icon('arrow-right', 'xs') }}</a>
   </div>
   {% if pelamar_terbaru %}
   <div class="table-wrap">
@@ -69,7 +69,7 @@
     </table>
   </div>
   {% else %}
-    {% with ico='👥', judul='Belum ada pelamar', pesan='Pelamar akan muncul setelah lowongan Anda tayang.' %}
+    {% with ico='users', judul='Belum ada pelamar', pesan='Pelamar akan muncul setelah lowongan Anda tayang.' %}
       {% include "partials/empty.html" %}
     {% endwith %}
   {% endif %}
@@ -77,14 +77,14 @@
 
 <div class="grid grid-2">
   <div class="card">
-    <div class="card-head"><h2>Lowongan aktif</h2><a href="/perusahaan/lowongan" class="btn btn-ghost btn-sm">Kelola →</a></div>
+    <div class="card-head"><h2>Lowongan aktif</h2><a href="/perusahaan/lowongan" class="btn btn-ghost btn-sm">Kelola {{ icon('arrow-right', 'xs') }}</a></div>
     <div class="card-body">
       {% if lowongan_aktif %}
         {% for j in lowongan_aktif %}
         <div class="flex between items-center gap" style="padding:.6rem 0;border-bottom:1px solid var(--line)">
           <div style="min-width:0">
             <div class="cell-main truncate"><a href="/lowongan/{{ j.slug }}">{{ j.title }}</a></div>
-            <div class="cell-sub">📍 {{ j.location }} · ⏳ {{ j.deadline | tanggal if j.deadline else 'tanpa batas' }}</div>
+            <div class="cell-sub">{{ icon('pin') }} {{ j.location }} · {{ icon('clock') }} {{ j.deadline | tanggal if j.deadline else 'tanpa batas' }}</div>
           </div>
           <a class="badge info nowrap" href="/perusahaan/pelamar?job_id={{ j.id }}">{{ counts.get(j.id, 0) }} pelamar</a>
         </div>

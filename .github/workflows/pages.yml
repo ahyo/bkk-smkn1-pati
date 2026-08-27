@@ -27,11 +27,14 @@ jobs:
         run: |
           node --check docs/assets/demo-app.js
           node --check docs/assets/demo-data.js
+          node --check docs/assets/icons.js
 
       - name: Pastikan berkas wajib ada
         run: |
           test -f docs/index.html
           test -f docs/assets/style.css
+          test -f docs/assets/demo.css
+          test -f docs/assets/icons.js
           test -f docs/.nojekyll
 
       - uses: actions/configure-pages@v6

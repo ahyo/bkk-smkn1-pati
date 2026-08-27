@@ -4,7 +4,7 @@
 {% block body %}
 <section class="hero">
   <div class="container">
-    <span class="eyebrow">🎓 Portal Resmi BKK {{ settings.school_name }}</span>
+    <span class="eyebrow">{{ icon('cap') }} Portal Resmi BKK {{ settings.school_name }}</span>
     <h1>Temukan Karier Pertamamu Bersama Mitra Industri Sekolah</h1>
     <p class="lead">
       Semua lowongan di portal ini diverifikasi terlebih dahulu oleh pengelola BKK sekolah,
@@ -18,7 +18,7 @@
         <option value="">Semua Kompetensi Keahlian</option>
         {% for m in MAJORS %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
       </select>
-      <button class="btn btn-accent" type="submit">🔍 Cari Lowongan</button>
+      <button class="btn btn-accent" type="submit">{{ icon('search') }} Cari Lowongan</button>
     </form>
 
     <div class="hero-stats">
@@ -37,7 +37,7 @@
       {% for a in announcements %}
       <div class="card">
         <div class="card-body">
-          <span class="badge accent">📢 Pengumuman</span>
+          <span class="badge accent">{{ icon('megaphone') }} Pengumuman</span>
           <h3 class="mt-1">{{ a.title }}</h3>
           <p class="small muted">{{ a.body[:160] }}{% if a.body|length > 160 %}…{% endif %}</p>
           <small class="muted">{{ a.created_at | tanggal }}</small>
@@ -57,7 +57,7 @@
         <h2>Peluang kerja yang baru dibuka</h2>
         <p>Diperbarui setiap kali mitra industri mengirimkan permintaan tenaga kerja.</p>
       </div>
-      <a href="/lowongan" class="btn btn-outline">Lihat Semua Lowongan →</a>
+      <a href="/lowongan" class="btn btn-outline">Lihat Semua Lowongan {{ icon('arrow-right', 'xs') }}</a>
     </div>
 
     {% if jobs %}
@@ -65,7 +65,7 @@
         {% for job in jobs %}{% include "partials/job_card.html" %}{% endfor %}
       </div>
     {% else %}
-      {% with ico='🗂️', judul='Belum ada lowongan tayang',
+      {% with ico='folder', judul='Belum ada lowongan tayang',
               pesan='Pengelola BKK sedang memverifikasi permintaan tenaga kerja dari mitra industri.' %}
         {% include "partials/empty.html" %}
       {% endwith %}
@@ -84,7 +84,7 @@
     </div>
     <div class="chips">
       {% for nama, jumlah in top_majors %}
-        <a class="chip" href="/lowongan?jurusan={{ nama | urlencode }}">🎓 {{ nama }} <b>{{ jumlah }}</b></a>
+        <a class="chip" href="/lowongan?jurusan={{ nama | urlencode }}">{{ icon('cap') }} {{ nama }} <b>{{ jumlah }}</b></a>
       {% endfor %}
     </div>
   </div>
@@ -127,11 +127,11 @@
         <span class="eyebrow-dark">Mitra DUDI</span>
         <h2>Perusahaan yang bekerja sama</h2>
       </div>
-      <a href="/perusahaan-mitra" class="btn btn-ghost">Semua mitra →</a>
+      <a href="/perusahaan-mitra" class="btn btn-ghost">Semua mitra {{ icon('arrow-right', 'xs') }}</a>
     </div>
     <div class="chips">
       {% for c in partners %}
-        <a class="chip" href="/perusahaan-mitra/{{ c.slug }}">🏢 {{ c.name }}</a>
+        <a class="chip" href="/perusahaan-mitra/{{ c.slug }}">{{ icon('building') }} {{ c.name }}</a>
       {% endfor %}
     </div>
   </div>

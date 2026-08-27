@@ -13,13 +13,13 @@
       <h1 style="margin-bottom:.25rem">{{ company.name }}</h1>
       <div class="chips">
         <span class="badge ok badge-dot">Mitra Terverifikasi</span>
-        {% if company.industry %}<span class="chip">🏭 {{ company.industry }}</span>{% endif %}
-        {% if company.city %}<span class="chip">📍 {{ company.city }}</span>{% endif %}
-        {% if company.employee_count %}<span class="chip">👥 {{ company.employee_count }} karyawan</span>{% endif %}
+        {% if company.industry %}<span class="chip">{{ icon('factory') }} {{ company.industry }}</span>{% endif %}
+        {% if company.city %}<span class="chip">{{ icon('pin') }} {{ company.city }}</span>{% endif %}
+        {% if company.employee_count %}<span class="chip">{{ icon('users') }} {{ company.employee_count }} karyawan</span>{% endif %}
       </div>
     </div>
     {% if company.website %}
-      <a href="{{ company.website }}" target="_blank" rel="noopener" class="btn btn-outline">🌐 Kunjungi Situs</a>
+      <a href="{{ company.website }}" target="_blank" rel="noopener" class="btn btn-outline">{{ icon('globe') }} Kunjungi Situs</a>
     {% endif %}
   </div>
 </div>
@@ -36,7 +36,7 @@
       <div class="grid">{% for job in jobs %}{% include "partials/job_card.html" %}{% endfor %}</div>
     {% else %}
       <div class="card">
-        {% with ico='📭', judul='Belum ada lowongan aktif', pesan='Perusahaan ini sedang tidak membuka lowongan.' %}
+        {% with ico='inbox', judul='Belum ada lowongan aktif', pesan='Perusahaan ini sedang tidak membuka lowongan.' %}
           {% include "partials/empty.html" %}
         {% endwith %}
       </div>
@@ -47,9 +47,9 @@
     <div class="card">
       <div class="card-head"><h3>Informasi Kontak</h3></div>
       <div class="card-body small">
-        {% if company.address %}<p>📍 {{ company.address }}</p>{% endif %}
-        {% if company.phone %}<p>☎️ {{ company.phone }}</p>{% endif %}
-        {% if company.contact_person %}<p>👤 {{ company.contact_person }}</p>{% endif %}
+        {% if company.address %}<p>{{ icon('pin') }} {{ company.address }}</p>{% endif %}
+        {% if company.phone %}<p>{{ icon('phone') }} {{ company.phone }}</p>{% endif %}
+        {% if company.contact_person %}<p>{{ icon('user') }} {{ company.contact_person }}</p>{% endif %}
         <p class="muted">Bergabung sejak {{ company.created_at | tanggal }}</p>
         <div class="divider"></div>
         <p class="tiny muted">
