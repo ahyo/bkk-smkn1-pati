@@ -38,16 +38,33 @@
             <input id="nis" type="text" name="nis" value="{{ form.nis | default('') }}">
           </div>
           <div class="field">
-            <label for="major">Kompetensi keahlian</label>
-            <select id="major" name="major">
-              <option value="">— pilih —</option>
-              {% for m in majors %}<option value="{{ m.id }}" {{ 'selected' if form.major_id == m.id|string }}>{{ m.code }} — {{ m.name }}</option>{% endfor %}
-            </select>
+            <label for="class_name">Kelas</label>
+            <input id="class_name" type="text" name="class_name" maxlength="40"
+                   placeholder="XII TKJ 1" value="{{ form.class_name | default('') }}">
           </div>
           <div class="field">
             <label for="graduation_year">Tahun lulus</label>
             <input id="graduation_year" type="number" name="graduation_year" min="1990" max="2100"
                    value="{{ form.graduation_year | default('') }}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="major_id">Kompetensi keahlian</label>
+            <select id="major_id" name="major_id">
+              <option value="">— pilih —</option>
+              {% for m in majors %}<option value="{{ m.id }}" {{ 'selected' if form.major_id == m.id|string }}>{{ m.code }} — {{ m.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="interest">Rencana setelah lulus</label>
+            <select id="interest" name="interest">
+              <option value="">— pilih —</option>
+              {% for i in Interest %}
+                <option value="{{ i.value }}" {{ 'selected' if form.interest == i.value }}>{{ INTEREST_LABEL[i] }}</option>
+              {% endfor %}
+            </select>
+            <div class="help">Dipakai BKK untuk rekap penelusuran lulusan.</div>
           </div>
         </div>
       </fieldset>

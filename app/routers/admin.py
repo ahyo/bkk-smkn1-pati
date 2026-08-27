@@ -22,6 +22,8 @@ from app.models import (
     Company,
     CompanyStatus,
     Job,
+    INTEREST_LABEL,
+    Interest,
     JobStatus,
     Major,
     Role,
@@ -550,6 +552,22 @@ async def laporan(
     )
     serapan_max = max((r["alumni"] for r in per_jurusan), default=1) or 1
 
+    # Rekap rencana lulusan (tracer study) mengikuti saringan angkatan yang sama.
+    minat_q = db.query(Seeker.interest, func.count(Seeker.id))
+    if tahun_lulus:
+        minat_q = minat_q.filter(Seeker.graduation_year == tahun_lulus)
+    minat_hitung = dict(minat_q.group_by(Seeker.interest).all())
+    minat_total = sum(minat_hitung.values())
+    per_minat = [
+        {
+            "minat": m,
+            "jumlah": minat_hitung.get(m, 0),
+            "persen": round(minat_hitung.get(m, 0) / minat_total * 100, 1) if minat_total else 0.0,
+        }
+        for m in Interest
+    ]
+    belum_isi = minat_hitung.get(None, 0)
+
     per_perusahaan = (
         db.query(Company.name, func.count(Job.id).label("lowongan"), func.count(Application.id).label("lamaran"))
         .outerjoin(Job, Job.company_id == Company.id)
@@ -580,6 +598,9 @@ async def laporan(
             "per_jurusan": per_jurusan,
             "total_serapan": total_serapan,
             "serapan_max": serapan_max,
+            "per_minat": per_minat,
+            "minat_total": minat_total,
+            "minat_belum_isi": belum_isi,
             "per_perusahaan": per_perusahaan,
             "bulan_map": bulan_map,
             "bulan_max": max(bulan_map.values(), default=1) or 1,
@@ -597,7 +618,34 @@ async def ekspor_csv(db: Session = Depends(get_db), jenis: str = "lamaran", lulu
     buf = io.StringIO()
     writer = csv.writer(buf)
 
-    if jenis == "serapan":
+    if jenis == "siswa":
+        writer.writerow([
+            "Tahun Lulus", "Nama", "Kelas", "Jurusan", "Minat", "Jenis Kelamin",
+            "Agama", "Pendidikan", "No HP", "Email", "Alamat", "Alamat Medsos",
+        ])
+        q = (
+            db.query(Seeker)
+            .join(User, Seeker.user_id == User.id)
+            .options(joinedload(Seeker.user), joinedload(Seeker.major))
+            .order_by(Seeker.graduation_year.desc().nullslast(), User.full_name)
+        )
+        for sk in q.all():
+            writer.writerow([
+                sk.graduation_year or "-",
+                sk.user.full_name,
+                sk.class_name or "-",
+                sk.major.name if sk.major else "-",
+                INTEREST_LABEL.get(sk.interest, "-"),
+                {"L": "Laki-laki", "P": "Perempuan"}.get(sk.gender, "-"),
+                sk.religion or "-",
+                sk.education_level or "-",
+                sk.phone or "-",
+                sk.user.email,
+                (sk.address or "-").replace("\n", " "),
+                sk.social_media or "-",
+            ])
+        nama = "data-siswa"
+    elif jenis == "serapan":
         writer.writerow([
             "Kode", "Kompetensi Keahlian", "Alumni Terdaftar", "Melamar",
             "Total Lamaran", "Terserap Kerja", "Serapan thd Alumni (%)",

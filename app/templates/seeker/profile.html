@@ -39,9 +39,16 @@
           <input id="nis" type="text" name="nis" value="{{ seeker.nis or '' }}">
         </div>
         <div class="field">
+          <label for="class_name">Kelas</label>
+          <input id="class_name" type="text" name="class_name" maxlength="40"
+                 placeholder="XII TKJ 1" value="{{ seeker.class_name or '' }}">
+        </div>
+        <div class="field">
           <label for="phone">Nomor WhatsApp</label>
           <input id="phone" type="tel" name="phone" value="{{ seeker.phone or '' }}">
         </div>
+      </div>
+      <div class="form-row-3">
         <div class="field">
           <label for="gender">Jenis kelamin</label>
           <select id="gender" name="gender">
@@ -50,8 +57,19 @@
             <option value="P" {{ 'selected' if seeker.gender == 'P' }}>Perempuan</option>
           </select>
         </div>
+        <div class="field">
+          <label for="religion">Agama</label>
+          <select id="religion" name="religion">
+            <option value="">— pilih —</option>
+            {% for a in AGAMA %}<option value="{{ a }}" {{ 'selected' if seeker.religion == a }}>{{ a }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="city">Domisili (kota)</label>
+          <input id="city" type="text" name="city" value="{{ seeker.city or '' }}">
+        </div>
       </div>
-      <div class="form-row-3">
+      <div class="form-row">
         <div class="field">
           <label for="birth_place">Tempat lahir</label>
           <input id="birth_place" type="text" name="birth_place" value="{{ seeker.birth_place or '' }}">
@@ -60,14 +78,17 @@
           <label for="birth_date">Tanggal lahir</label>
           <input id="birth_date" type="date" name="birth_date" value="{{ seeker.birth_date or '' }}">
         </div>
-        <div class="field">
-          <label for="city">Domisili (kota)</label>
-          <input id="city" type="text" name="city" value="{{ seeker.city or '' }}">
-        </div>
       </div>
       <div class="field">
         <label for="address">Alamat lengkap</label>
         <textarea id="address" name="address" style="min-height:70px">{{ seeker.address or '' }}</textarea>
+      </div>
+      <div class="field">
+        <label for="social_media">Alamat media sosial</label>
+        <input id="social_media" type="text" name="social_media" maxlength="200"
+               placeholder="@namaakun · instagram.com/... · tiktok.com/@..."
+               value="{{ seeker.social_media or '' }}">
+        <div class="help">Boleh nama akun atau tautan. Sebagian perusahaan memeriksanya saat seleksi.</div>
       </div>
     </div>
   </div>
@@ -77,8 +98,8 @@
     <div class="card-body">
       <div class="form-row">
         <div class="field">
-          <label for="major">Kompetensi keahlian</label>
-          <select id="major" name="major">
+          <label for="major_id">Kompetensi keahlian</label>
+          <select id="major_id" name="major_id">
             <option value="">— pilih —</option>
             {% for m in majors %}<option value="{{ m.id }}" {{ 'selected' if seeker.major_id == m.id }}>{{ m.code }} — {{ m.name }}</option>{% endfor %}
           </select>
@@ -87,6 +108,25 @@
           <label for="graduation_year">Tahun lulus</label>
           <input id="graduation_year" type="number" name="graduation_year" min="1990" max="2100"
                  value="{{ seeker.graduation_year or '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="education_level">Pendidikan terakhir</label>
+          <select id="education_level" name="education_level">
+            <option value="">— pilih —</option>
+            {% for p in PENDIDIKAN %}<option value="{{ p }}" {{ 'selected' if seeker.education_level == p }}>{{ p }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="interest">Rencana setelah lulus</label>
+          <select id="interest" name="interest">
+            <option value="">— pilih —</option>
+            {% for i in Interest %}
+              <option value="{{ i.value }}" {{ 'selected' if seeker.interest == i }}>{{ INTEREST_LABEL[i] }}</option>
+            {% endfor %}
+          </select>
+          <div class="help">Dipakai BKK untuk rekap penelusuran lulusan.</div>
         </div>
       </div>
       <div class="field">

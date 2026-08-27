@@ -11,13 +11,17 @@ from app import __version__
 from app.config import settings
 from app.icons import icon
 from app.models import (
+    AGAMA,
     APPLICATION_STATUS_LABEL,
     COMPANY_STATUS_LABEL,
     EMPLOYMENT_LABEL,
+    INTEREST_LABEL,
+    PENDIDIKAN,
     JOB_STATUS_LABEL,
     ApplicationStatus,
     CompanyStatus,
     EmploymentType,
+    Interest,
     JobStatus,
     Role,
 )
@@ -63,6 +67,7 @@ templates.env.filters.update(
     label_status_lowongan=lambda v: JOB_STATUS_LABEL.get(v, _enum_value(v)),
     label_status_lamaran=lambda v: APPLICATION_STATUS_LABEL.get(v, _enum_value(v)),
     label_status_perusahaan=lambda v: COMPANY_STATUS_LABEL.get(v, _enum_value(v)),
+    label_minat=lambda v: INTEREST_LABEL.get(v, _enum_value(v) or "-"),
     badge_lowongan=lambda v: BADGE_JOB.get(v, "muted"),
     badge_lamaran=lambda v: BADGE_APP.get(v, "muted"),
     badge_perusahaan=lambda v: BADGE_COMPANY.get(v, "muted"),
@@ -79,6 +84,10 @@ templates.env.globals.update(
     CompanyStatus=CompanyStatus,
     EmploymentType=EmploymentType,
     EMPLOYMENT_LABEL=EMPLOYMENT_LABEL,
+    INTEREST_LABEL=INTEREST_LABEL,
+    Interest=Interest,
+    AGAMA=AGAMA,
+    PENDIDIKAN=PENDIDIKAN,
     APPLICATION_STATUS_LABEL=APPLICATION_STATUS_LABEL,
     JOB_STATUS_LABEL=JOB_STATUS_LABEL,
 )

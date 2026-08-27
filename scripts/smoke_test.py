@@ -7,6 +7,7 @@ Jalankan setelah `python -m app.seed --reset`:
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -18,7 +19,7 @@ from app.config import settings  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import (  # noqa: E402
-    Application, Company, CompanyStatus, Job, JobStatus, Major, Role, Seeker, User,
+    Application, Company, CompanyStatus, Interest, Job, JobStatus, Major, Role, Seeker, User,
 )
 
 OK, GAGAL = [], []
@@ -181,6 +182,107 @@ def main() -> int:
             "password_confirm": "abc", "agree": "1",
         })
         cek("Tolak kata sandi lemah", r.status_code == 400 and "minimal 8 karakter" in r.text)
+
+    # ── Formulir benar-benar tersambung ke router ─────────────────────────
+    #
+    # Pengujian di bawah mengirim data memakai nama field yang dibaca dari HTML
+    # yang benar-benar dirender, bukan nama yang diasumsikan. Tanpa ini, salah
+    # ketik nama field lolos tanpa terdeteksi: formulir tampak normal, tetapi
+    # nilainya diam-diam tidak tersimpan.
+    print("\n── Formulir tersambung ke router ─────────────────────────────")
+    with TestClient(app) as c:
+        db = SessionLocal()
+        try:
+            jurusan = db.query(Major).order_by(Major.sort_order).first()
+            jid = jurusan.id
+            jnama = jurusan.name
+        finally:
+            db.close()
+
+        html = c.get("/daftar/pencari-kerja").text
+        field = set(re.findall(r'name="([a-zA-Z_]+)"', html))
+        for wajib in ("full_name", "email", "major_id", "class_name", "interest", "graduation_year"):
+            cek(f"Formulir daftar punya field '{wajib}'", wajib in field,
+                f"field tersedia: {sorted(field)}")
+
+        email_uji = "uji.formulir@contoh.id"
+        c.post("/daftar/pencari-kerja", data={
+            "full_name": "Uji Formulir", "email": email_uji, "phone": "081200000000",
+            "nis": "20260001", "class_name": "XII TKJ 1", "major_id": str(jid),
+            "graduation_year": "2026", "interest": "kerja",
+            "password": "Rahasia123", "password_confirm": "Rahasia123", "agree": "1",
+        }, follow_redirects=False)
+
+        db = SessionLocal()
+        try:
+            u = db.query(User).filter(User.email == email_uji).first()
+            sk = db.query(Seeker).filter(Seeker.user_id == u.id).first() if u else None
+            cek("Pendaftaran menyimpan jurusan", bool(sk and sk.major_id == jid),
+                f"major_id={getattr(sk, 'major_id', None)} (harusnya {jid} = {jnama})")
+            cek("Pendaftaran menyimpan kelas", bool(sk and sk.class_name == "XII TKJ 1"),
+                f"class_name={getattr(sk, 'class_name', None)}")
+            cek("Pendaftaran menyimpan minat", bool(sk and sk.interest == Interest.KERJA),
+                f"interest={getattr(sk, 'interest', None)}")
+        finally:
+            db.close()
+
+        # Profil: bandingkan field yang dirender dengan yang benar-benar tersimpan.
+        c.post("/masuk", data={"email": email_uji, "password": "Rahasia123"}, follow_redirects=True)
+        html = c.get("/pelamar/profil").text
+        field = set(re.findall(r'name="([a-zA-Z_]+)"', html))
+        for wajib in ("major_id", "class_name", "religion", "education_level",
+                      "interest", "social_media", "address", "gender"):
+            cek(f"Formulir profil punya field '{wajib}'", wajib in field)
+
+        c.post("/pelamar/profil", data={
+            "full_name": "Uji Formulir", "nis": "20260001", "class_name": "XII RPL 2",
+            "phone": "081200000001", "gender": "P", "religion": "Katolik",
+            "birth_place": "Pati", "birth_date": "2007-01-15", "city": "Pati",
+            "address": "Jalan Uji Nomor 1", "social_media": "tiktok.com/@ujiformulir",
+            "major_id": str(jid), "graduation_year": "2026",
+            "education_level": "SMK/SMA Sederajat", "interest": "kuliah",
+            "headline": "Uji", "summary": "-", "skills": "Uji",
+            "experience": "", "education": "", "open_to_work": "1",
+        }, follow_redirects=False)
+
+        db = SessionLocal()
+        try:
+            sk = db.query(Seeker).join(User).filter(User.email == email_uji).first()
+            tersimpan = {
+                "kelas": sk.class_name == "XII RPL 2",
+                "agama": sk.religion == "Katolik",
+                "pendidikan": sk.education_level == "SMK/SMA Sederajat",
+                "minat": sk.interest == Interest.KULIAH,
+                "medsos": sk.social_media == "tiktok.com/@ujiformulir",
+                "alamat": sk.address == "Jalan Uji Nomor 1",
+                "jenis kelamin": sk.gender == "P",
+                "jurusan": sk.major_id == jid,
+            }
+            for nama_field, ok_ in tersimpan.items():
+                cek(f"Profil menyimpan {nama_field}", ok_)
+        finally:
+            db.close()
+
+        # Ekspor data siswa memuat kolom yang diminta sekolah.
+        c.post("/keluar")
+        c.post("/masuk", data={"email": settings.admin_email, "password": settings.admin_password},
+               follow_redirects=True)
+        r = c.get("/admin/laporan/ekspor?jenis=siswa")
+        judul = r.text.splitlines()[0] if r.text else ""
+        cek("Ekspor data siswa memuat 12 kolom yang diminta",
+            judul == "Tahun Lulus,Nama,Kelas,Jurusan,Minat,Jenis Kelamin,Agama,"
+                     "Pendidikan,No HP,Email,Alamat,Alamat Medsos", judul)
+        cek("Ekspor data siswa berisi baris data", len(r.text.strip().splitlines()) > 1)
+
+        # Bersihkan akun uji.
+        db = SessionLocal()
+        try:
+            u = db.query(User).filter(User.email == email_uji).first()
+            if u:
+                db.delete(u)
+                db.commit()
+        finally:
+            db.close()
 
     print(f"\n{'='*62}\nBerhasil: {len(OK)}   Gagal: {len(GAGAL)}")
     if GAGAL:

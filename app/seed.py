@@ -20,10 +20,13 @@ from app.models import (
     Company,
     CompanyStatus,
     DEFAULT_MAJORS,
+    AGAMA,
     EmploymentType,
     Job,
     JobStatus,
+    Interest,
     Major,
+    PENDIDIKAN,
     Role,
     SavedJob,
     Seeker,
@@ -289,6 +292,7 @@ def seed() -> None:
             seeker = Seeker(
                 user_id=user.id,
                 nis=f"2024{1000 + i}",
+                class_name=f"XII {DEFAULT_MAJORS[i % (len(DEFAULT_MAJORS) - 1)][0]} {1 + i % 3}",
                 phone=f"08{random.randint(1000000000, 9999999999)}"[:13],
                 gender=gender,
                 birth_place=random.choice(["Pati", "Kudus", "Jepara", "Rembang", "Juwana"]),
@@ -297,6 +301,13 @@ def seed() -> None:
                 city="Pati",
                 major_id=majors[jurusan].id,
                 graduation_year=tahun_lulus,
+                religion=random.choices(AGAMA, weights=[70, 12, 10, 4, 3, 1])[0],
+                education_level=PENDIDIKAN[0],
+                interest=random.choices(
+                    [Interest.KERJA, Interest.KULIAH, Interest.WIRAUSAHA, Interest.BELUM],
+                    weights=[62, 24, 9, 5],
+                )[0],
+                social_media=f"instagram.com/{slugify(nama).replace('-', '.')}",
                 headline=f"Lulusan {jurusan} — siap kerja dan cepat beradaptasi",
                 summary=(
                     f"Alumni {settings.school_name} program keahlian {jurusan} tahun {tahun_lulus}. "

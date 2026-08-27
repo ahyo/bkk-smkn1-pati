@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import login_required, redirect
-from app.models import ActivityLog, Company, CompanyStatus, Role, Seeker, User
+from app.models import ActivityLog, Company, CompanyStatus, Interest, Role, Seeker, User
 from app.security import hash_password, password_issues, verify_password
 from app.templating import render
 from app.utils import daftar_jurusan, flash, unique_slug
@@ -99,15 +99,18 @@ async def proses_daftar_pelamar(
     email: str = Form(...),
     phone: str = Form(""),
     nis: str = Form(""),
+    class_name: str = Form(""),
     major_id: str = Form(""),
     graduation_year: str = Form(""),
+    interest: str = Form(""),
     password: str = Form(...),
     password_confirm: str = Form(...),
     agree: str = Form(""),
 ):
     form = {
         "full_name": full_name, "email": email, "phone": phone,
-        "nis": nis, "major_id": major_id, "graduation_year": graduation_year,
+        "nis": nis, "class_name": class_name, "major_id": major_id,
+        "graduation_year": graduation_year, "interest": interest,
     }
     email = email.strip().lower()
     errors: list[str] = []
@@ -142,8 +145,10 @@ async def proses_daftar_pelamar(
             user_id=user.id,
             phone=phone.strip() or None,
             nis=nis.strip() or None,
+            class_name=class_name.strip() or None,
             major_id=int(major_id) if major_id.isdigit() else None,
             graduation_year=int(graduation_year) if graduation_year.isdigit() else None,
+            interest=Interest(interest) if interest in Interest._value2member_map_ else None,
         )
     )
     log_activity(db, user, "register_seeker", "Pendaftaran akun pencari kerja")

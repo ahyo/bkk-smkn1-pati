@@ -8,6 +8,7 @@
   <div class="btn-group">
     <a href="/admin/laporan/ekspor?jenis=serapan{{ '&lulus=' ~ tahun_lulus if tahun_lulus }}"
        class="btn btn-primary">{{ icon('download') }} Serapan</a>
+    <a href="/admin/laporan/ekspor?jenis=siswa" class="btn btn-outline">{{ icon('download') }} Data Siswa</a>
     <a href="/admin/laporan/ekspor?jenis=lamaran" class="btn btn-outline">{{ icon('download') }} Lamaran</a>
     <a href="/admin/laporan/ekspor?jenis=lowongan" class="btn btn-outline">{{ icon('download') }} Lowongan</a>
     <a href="/admin/laporan/ekspor?jenis=perusahaan" class="btn btn-outline">{{ icon('download') }} Perusahaan</a>
@@ -152,6 +153,36 @@
     </div>
   </div>
 </section>
+
+<div class="card mb-3">
+  <div class="card-head">
+    <div>
+      <h2>Rencana lulusan setelah tamat</h2>
+      <p class="muted small mb-0">Diisi sendiri oleh siswa/alumni pada profilnya.
+        {% if tahun_lulus %}Angkatan {{ tahun_lulus }}.{% else %}Semua angkatan.{% endif %}</p>
+    </div>
+    <span class="muted small">{{ minat_total }} responden</span>
+  </div>
+  <div class="card-body">
+    {% if minat_total %}
+      {% for r in per_minat %}
+      <div class="hbar">
+        <div>
+          <div class="flex between"><span>{{ r.minat | label_minat }}</span><b>{{ r.jumlah }}</b></div>
+          <div class="track"><i style="width:{{ r.persen }}%"></i></div>
+        </div>
+        <span class="tiny muted right">{{ r.persen }}%</span>
+      </div>
+      {% endfor %}
+      {% if minat_belum_isi %}
+        <p class="small muted mt-2 mb-0">{{ icon('info', 'xs') }}
+          {{ minat_belum_isi }} siswa belum mengisi rencana setelah lulus.</p>
+      {% endif %}
+    {% else %}
+      <p class="muted center mb-0">Belum ada data. Rekap terisi setelah siswa melengkapi profilnya.</p>
+    {% endif %}
+  </div>
+</div>
 
 <div class="grid">
   <div class="card">

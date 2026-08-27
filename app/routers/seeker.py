@@ -15,6 +15,7 @@ from app.models import (
     ApplicationStatus,
     Company,
     CompanyStatus,
+    Interest,
     Job,
     JobStatus,
     SavedJob,
@@ -108,14 +109,19 @@ async def simpan_profil(
     seeker: Seeker = Depends(current_seeker),
     full_name: str = Form(...),
     nis: str = Form(""),
+    class_name: str = Form(""),
     phone: str = Form(""),
     gender: str = Form(""),
+    religion: str = Form(""),
     birth_place: str = Form(""),
     birth_date: str = Form(""),
     address: str = Form(""),
     city: str = Form(""),
     major_id: str = Form(""),
     graduation_year: str = Form(""),
+    education_level: str = Form(""),
+    interest: str = Form(""),
+    social_media: str = Form(""),
     headline: str = Form(""),
     summary: str = Form(""),
     skills: str = Form(""),
@@ -127,14 +133,19 @@ async def simpan_profil(
 ):
     user.full_name = full_name.strip()
     seeker.nis = nis.strip() or None
+    seeker.class_name = class_name.strip() or None
     seeker.phone = phone.strip() or None
     seeker.gender = gender or None
+    seeker.religion = religion or None
     seeker.birth_place = birth_place.strip() or None
     seeker.birth_date = date.fromisoformat(birth_date) if birth_date else None
     seeker.address = address.strip() or None
     seeker.city = city.strip() or None
     seeker.major_id = int(major_id) if major_id.isdigit() else None
     seeker.graduation_year = int(graduation_year) if graduation_year.isdigit() else None
+    seeker.education_level = education_level or None
+    seeker.interest = Interest(interest) if interest in Interest._value2member_map_ else None
+    seeker.social_media = social_media.strip() or None
     seeker.headline = headline.strip() or None
     seeker.summary = summary.strip() or None
     seeker.skills = skills.strip() or None

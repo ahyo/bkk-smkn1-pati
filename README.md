@@ -93,8 +93,9 @@ bkk-smk1-pati/
 ├── docs/                  # Demo statis untuk GitHub Pages
 │   └── assets/demo.css    # Gaya khusus demo (tidak pernah tertimpa)
 ├── scripts/
-│   ├── smoke_test.py      # Uji asap 65 pemeriksaan
+│   ├── smoke_test.py      # Uji asap 92 pemeriksaan
 │   ├── migrate_jurusan.py # Migrasi jurusan teks → tabel master
+│   ├── migrate_kolom.py   # Tambah kolom model yang belum ada di DB
 │   └── build_demo_assets.py  # Sinkronkan CSS + ikon ke docs/
 ├── .github/workflows/     # CI + deploy GitHub Pages
 ├── docker-compose.yml     # PostgreSQL + aplikasi
@@ -255,7 +256,7 @@ sesuaikan dengan jurusan yang benar-benar dibuka sekolah.
 | `users` | Akun tunggal untuk tiga peran (`admin`, `company`, `seeker`) |
 | `majors` | Kompetensi keahlian (jurusan) — data induk laporan serapan |
 | `companies` | Profil perusahaan + status verifikasi |
-| `seekers` | Profil pencari kerja, CV, keahlian, `major_id` → `majors` |
+| `seekers` | Profil pencari kerja, data siswa, CV, keahlian, `major_id` → `majors` |
 | `jobs` | Lowongan, status moderasi, statistik tayangan, `major_id` → `majors` |
 | `applications` | Lamaran, status seleksi, catatan, jadwal wawancara |
 | `saved_jobs` | Lowongan yang ditandai pencari kerja |
@@ -264,6 +265,29 @@ sesuaikan dengan jurusan yang benar-benar dibuka sekolah.
 
 Skema dibuat otomatis saat aplikasi dijalankan (`Base.metadata.create_all`).
 Alembic sudah terpasang pada `requirements.txt` bila kelak diperlukan migrasi bertahap.
+
+### Data siswa yang direkam
+
+| Kolom | Sumber | Keterangan |
+|---|---|---|
+| Tahun lulus | `seekers.graduation_year` | dipakai menyaring laporan per angkatan |
+| Nama | `users.full_name` | |
+| Kelas | `seekers.class_name` | mis. `XII TKJ 1` |
+| Jurusan | `seekers.major_id` → `majors` | |
+| Minat | `seekers.interest` | bekerja / kuliah / wirausaha / belum menentukan |
+| Jenis kelamin | `seekers.gender` | `L` / `P` |
+| Agama | `seekers.religion` | enam agama pada dokumen kependudukan |
+| Pendidikan | `seekers.education_level` | jenjang terakhir (SMK/SMA, D1–S2) |
+| No HP | `seekers.phone` | |
+| Email | `users.email` | sekaligus identitas masuk |
+| Alamat | `seekers.address` | |
+| Alamat medsos | `seekers.social_media` | nama akun atau tautan |
+
+Diisi saat pendaftaran (yang pokok) dan dilengkapi pada halaman profil. Admin
+mengunduhnya lewat **Laporan → Data Siswa**, atau
+`/admin/laporan/ekspor?jenis=siswa`, dengan urutan kolom persis seperti tabel di atas.
+Kolom *Minat* juga direkap sebagai grafik **Rencana lulusan setelah tamat** pada halaman
+laporan, mengikuti saringan angkatan yang sama.
 
 ### Mengapa jurusan berupa tabel, bukan teks
 
@@ -278,6 +302,16 @@ dengan skrip khusus — `create_all` hanya membuat tabel baru, tidak menambah ko
 ```bash
 python scripts/migrate_jurusan.py            # pratinjau, tidak menulis apa pun
 python scripts/migrate_jurusan.py --terapkan # jalankan
+```
+
+Untuk kolom yang ditambahkan belakangan pada model (mis. kelas, agama, minat),
+gunakan skrip generik berikut — ia membandingkan model dengan database lalu
+menambahkan kolom yang belum ada. Hanya melakukan `ADD COLUMN`, tidak pernah
+menghapus atau mengubah tipe:
+
+```bash
+python scripts/migrate_kolom.py            # pratinjau
+python scripts/migrate_kolom.py --terapkan # jalankan
 ```
 
 Skrip memetakan nilai teks lama ke baris `majors`, mempertahankan nama jurusan di luar
@@ -306,14 +340,15 @@ kolom lama bila masih ada baris yang tidak terpetakan.
 `/admin/pengumuman` · `/admin/log`
 
 `/admin/laporan?lulus=2025` menyaring serapan per angkatan;
-`/admin/laporan/ekspor?jenis=serapan&lulus=2025` mengunduhnya sebagai CSV.
+`/admin/laporan/ekspor?jenis=serapan&lulus=2025` mengunduhnya sebagai CSV;
+`/admin/laporan/ekspor?jenis=siswa` mengunduh data siswa lengkap.
 
 ---
 
 ## Pengujian
 
 ```bash
-make test          # 65 pemeriksaan: rute publik, ketiga peran, penjaga akses, validasi formulir
+make test          # 92 pemeriksaan: rute publik, ketiga peran, penjaga akses, validasi formulir
 node --check docs/assets/demo-app.js   # sintaks demo statis
 ```
 

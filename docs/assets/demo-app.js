@@ -90,6 +90,11 @@
   function mySeeker() { var u = user(); return u && u.seekerId ? seeker(u.seekerId) : null; }
   function seekerUser(sid) { return DB.users.find(function (u) { return u.seekerId === sid; }); }
   function job(id) { return DB.jobs.find(function (j) { return j.id === id; }); }
+  var MINAT = { kerja: "Bekerja", kuliah: "Melanjutkan Kuliah",
+                wirausaha: "Wirausaha", belum: "Belum Menentukan" };
+  var AGAMA = ["Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"];
+  var PENDIDIKAN = ["SMK/SMA Sederajat", "D1", "D2", "D3", "D4 / S1", "S2", "Lainnya"];
+
   function slug(teks) {
     return String(teks || "").toLowerCase()
       .replace(/[^\w\s-]/g, "").trim()
@@ -105,6 +110,7 @@
   }
   function completeness(s) {
     var f = [s.phone, s.gender, s.birth, s.city, s.majorId, s.grad, s.headline, s.summary,
+             s.class, s.religion, s.educationLevel, s.interest, s.socialMedia,
              s.skills, s.education, s.cv, s.photo, s.experience];
     return Math.round(f.filter(Boolean).length / f.length * 100);
   }
@@ -550,8 +556,10 @@
       '<input type="tel" name="phone" placeholder="08xxxxxxxxxx"></div></div>' +
       '</fieldset>' +
       '<fieldset><legend>Data sekolah</legend>' +
-      '<div class="form-row">' +
+      '<div class="form-row-3">' +
       '<div class="field"><label>NIS / NISN</label><input type="text" name="nis"></div>' +
+      '<div class="field"><label>Kelas</label>' +
+      '<input type="text" name="class" maxlength="40" placeholder="XII TKJ 1"></div>' +
       '<div class="field"><label>Tahun lulus</label>' +
       '<input type="number" name="grad" min="2000" max="2100" placeholder="2026"></div></div>' +
       '<div class="field"><label>Kompetensi keahlian</label><select name="majorId">' +
@@ -560,6 +568,12 @@
         return '<option value="' + m.id + '">' + esc(m.code) + ' — ' + esc(m.name) + '</option>';
       }).join("") + '</select>' +
       '<div class="help">Dipakai untuk merekomendasikan lowongan dan menghitung serapan kerja.</div></div>' +
+      '<div class="field"><label>Rencana setelah lulus</label><select name="interest">' +
+      '<option value="">— pilih —</option>' +
+      Object.keys(MINAT).map(function (k) {
+        return '<option value="' + k + '">' + MINAT[k] + '</option>';
+      }).join("") + '</select>' +
+      '<div class="help">Dipakai BKK untuk rekap penelusuran lulusan.</div></div>' +
       '</fieldset>' +
       '<fieldset><legend>Keamanan akun</legend>' +
       '<div class="form-row">' +
@@ -765,13 +779,23 @@
       '<div style="flex:1;min-width:220px"><label>Foto profil</label><input type="file" name="photo" accept="image/*">' +
       '<div class="help">JPG/PNG, maksimal 5 MB.</div></div></div>' +
       fld("Nama lengkap", "name", u.name) +
-      '<div class="form-row-3">' + fld("NIS / NISN", "nis", s.nis) + fld("Nomor WhatsApp", "phone", s.phone, "tel") +
+      '<div class="form-row-3">' + fld("NIS / NISN", "nis", s.nis) +
+      fld("Kelas", "class", s.class) + fld("Nomor WhatsApp", "phone", s.phone, "tel") + '</div>' +
+      '<div class="form-row-3">' +
       '<div class="field"><label>Jenis kelamin</label><select name="gender">' +
       ["", "L", "P"].map(function (g) {
         return '<option value="' + g + '" ' + (s.gender === g ? "selected" : "") + '>' +
           (g === "L" ? "Laki-laki" : g === "P" ? "Perempuan" : "— pilih —") + '</option>';
-      }).join("") + '</select></div></div>' +
-      '<div class="form-row">' + fld("Tanggal lahir", "birth", s.birth, "date") + fld("Domisili (kota)", "city", s.city) + '</div>' +
+      }).join("") + '</select></div>' +
+      '<div class="field"><label>Agama</label><select name="religion">' +
+      '<option value="">— pilih —</option>' + AGAMA.map(function (a) {
+        return '<option' + (s.religion === a ? " selected" : "") + '>' + esc(a) + '</option>';
+      }).join("") + '</select></div>' +
+      fld("Domisili (kota)", "city", s.city) + '</div>' +
+      '<div class="form-row">' + fld("Tanggal lahir", "birth", s.birth, "date") +
+      fld("Alamat media sosial", "socialMedia", s.socialMedia) + '</div>' +
+      '<div class="field"><label>Alamat lengkap</label>' +
+      '<textarea name="address" rows="2">' + esc(s.address || "") + '</textarea></div>' +
       '</div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Pendidikan &amp; Kompetensi</h2></div><div class="card-body">' +
       '<div class="form-row"><div class="field"><label>Kompetensi keahlian</label><select name="major">' +
@@ -779,6 +803,15 @@
         return '<option value="' + m.id + '"' + (s.majorId === m.id ? " selected" : "") + '>' +
           esc(m.code) + ' — ' + esc(m.name) + '</option>';
       }).join("") + '</select></div>' + fld("Tahun lulus", "grad", s.grad, "number") + '</div>' +
+      '<div class="form-row">' +
+      '<div class="field"><label>Pendidikan terakhir</label><select name="educationLevel">' +
+      '<option value="">— pilih —</option>' + PENDIDIKAN.map(function (x) {
+        return '<option' + (s.educationLevel === x ? " selected" : "") + '>' + esc(x) + '</option>';
+      }).join("") + '</select></div>' +
+      '<div class="field"><label>Rencana setelah lulus</label><select name="interest">' +
+      '<option value="">— pilih —</option>' + Object.keys(MINAT).map(function (k) {
+        return '<option value="' + k + '"' + (s.interest === k ? " selected" : "") + '>' + MINAT[k] + '</option>';
+      }).join("") + '</select></div></div>' +
       fld("Headline profil", "headline", s.headline) +
       '<div class="field"><label>Ringkasan diri</label><textarea name="summary" maxlength="1200">' + esc(s.summary || "") + '</textarea></div>' +
       fld("Keahlian (pisahkan dengan koma)", "skills", s.skills) +
@@ -1332,6 +1365,16 @@
     });
     angkatan.sort(function (a, b) { return b - a; });
 
+    // Rekap rencana lulusan mengikuti saringan angkatan yang sama.
+    var respons = DB.seekers.filter(function (x) { return !lulus || Number(x.grad) === lulus; });
+    var minatTotal = respons.filter(function (x) { return x.interest; }).length;
+    var perMinat = Object.keys(MINAT).map(function (k) {
+      var n = respons.filter(function (x) { return x.interest === k; }).length;
+      return { kunci: k, label: MINAT[k], jumlah: n,
+               persen: minatTotal ? Math.round(n / minatTotal * 1000) / 10 : 0 };
+    });
+    var minatBelumIsi = respons.filter(function (x) { return !x.interest; }).length;
+
     var perPerusahaan = DB.companies.map(function (c) {
       var jobs = DB.jobs.filter(function (j) { return j.companyId === c.id; });
       var lam = jobs.reduce(function (m, j) { return m + appsOfJob(j.id).length; }, 0);
@@ -1348,7 +1391,9 @@
 
     return '<div class="page-head"><div><h1>Laporan &amp; Rekap Penyaluran</h1>' +
       '<p>Bahan pelaporan BKK ke sekolah dan dinas terkait.</p></div>' +
-      '<div class="btn-group"><button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">' + ICON('download') + ' Lamaran</button>' +
+      '<div class="btn-group">' +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="siswa">' + ICON('download') + ' Data Siswa</button>' +
+      '<button class="btn btn-outline" data-action="ekspor" data-jenis="lamaran">' + ICON('download') + ' Lamaran</button>' +
       '<button class="btn btn-outline" data-action="ekspor" data-jenis="lowongan">' + ICON('download') + ' Lowongan</button>' +
       '<button class="btn btn-primary" data-action="cetak">' + ICON('printer') + ' Cetak</button></div></div>' +
       '<div class="card mb-3"><div class="card-head"><h2>Lamaran per bulan — tahun 2026</h2></div>' +
@@ -1401,6 +1446,22 @@
         '<td><span class="badge ' + (totS.persen >= 60 ? "ok" : "warn") + '">' + totS.persen + '%</span></td>' +
         '<td></td></tr></tfoot></table></div>' +
       '</div></section>' +
+      '<div class="card mb-3"><div class="card-head">' +
+      '<div><h2>Rencana lulusan setelah tamat</h2>' +
+      '<p class="muted small mb-0">Diisi sendiri oleh siswa/alumni pada profilnya. ' +
+      (lulus ? "Angkatan " + lulus + "." : "Semua angkatan.") + '</p></div>' +
+      '<span class="muted small">' + minatTotal + ' responden</span></div>' +
+      '<div class="card-body">' + (minatTotal
+        ? perMinat.map(function (r) {
+            return '<div class="hbar"><div>' +
+              '<div class="flex between"><span>' + esc(r.label) + '</span><b>' + r.jumlah + '</b></div>' +
+              '<div class="track"><i style="width:' + r.persen + '%"></i></div></div>' +
+              '<span class="tiny muted right">' + r.persen + '%</span></div>';
+          }).join("") +
+          (minatBelumIsi ? '<p class="small muted mt-2 mb-0">' + ICON('info', 'xs') + ' ' +
+            minatBelumIsi + ' siswa belum mengisi rencana setelah lulus.</p>' : "")
+        : '<p class="muted center mb-0">Belum ada data. Rekap terisi setelah siswa melengkapi profilnya.</p>') +
+      '</div></div>' +
       '<div class="grid">' +
       '<div class="card"><div class="card-head"><h2>Perusahaan paling aktif</h2></div>' +
       '<div class="table-wrap"><table class="data"><thead><tr><th>Perusahaan</th>' +
@@ -1600,7 +1661,20 @@
   // ── Aksi ────────────────────────────────────────────────────────────────
   function csv(jenis) {
     var rows;
-    if (jenis === "lowongan") {
+    if (jenis === "siswa") {
+      rows = [["Tahun Lulus", "Nama", "Kelas", "Jurusan", "Minat", "Jenis Kelamin",
+               "Agama", "Pendidikan", "No HP", "Email", "Alamat", "Alamat Medsos"]].concat(
+        DB.seekers.slice().sort(function (a, b) { return (b.grad || 0) - (a.grad || 0); })
+          .map(function (x) {
+            var su = seekerUser(x.id) || {};
+            return [x.grad || "-", su.name || "-", x.class || "-",
+                    majorName(x.majorId, "-"), MINAT[x.interest] || "-",
+                    x.gender === "L" ? "Laki-laki" : x.gender === "P" ? "Perempuan" : "-",
+                    x.religion || "-", x.educationLevel || "-", x.phone || "-",
+                    su.email || "-", (x.address || "-").replace(/\n/g, " "),
+                    x.socialMedia || "-"];
+          }));
+    } else if (jenis === "lowongan") {
       rows = [["ID", "Judul", "Perusahaan", "Lokasi", "Jurusan", "Status", "Kuota", "Deadline"]].concat(
         DB.jobs.map(function (j) {
           return [j.id, j.title, company(j.companyId).name, j.location, majorName(j.majorId, "-"),
@@ -1770,6 +1844,8 @@
       var sid = Math.max.apply(null, DB.seekers.map(function (x) { return x.id; })) + 1;
       DB.seekers.push({
         id: sid, userId: uid, nis: val("nis") || null, phone: val("phone") || null,
+        class: val("class") || null, religion: null, educationLevel: null,
+        interest: val("interest") || null, socialMedia: null,
         gender: null, birth: null, city: null,
         majorId: parseInt(val("majorId"), 10) || null,
         grad: parseInt(val("grad"), 10) || null,
@@ -1813,8 +1889,12 @@
     if (kind === "profil-pelamar") {
       var ps = mySeeker(), pu = user();
       pu.name = val("name") || pu.name;
-      ["nis", "phone", "gender", "birth", "city", "major", "headline", "summary", "skills", "education", "experience"]
+      ["nis", "class", "phone", "gender", "religion", "birth", "city", "address",
+       "educationLevel", "interest", "socialMedia",
+       "headline", "summary", "skills", "education", "experience"]
         .forEach(function (k) { ps[k] = val(k) || null; });
+      // Jurusan disimpan sebagai id angka, bukan teks dari <select name="major">.
+      ps.majorId = parseInt(val("major"), 10) || null;
       ps.grad = Number(val("grad")) || null;
       ps.openToWork = !!d.get("openToWork");
       if (d.get("cv") && d.get("cv").name) ps.cv = true;

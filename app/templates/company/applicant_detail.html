@@ -19,7 +19,10 @@
           <div class="chips">
             <span class="badge {{ app.status | badge_lamaran }}">{{ app.status | label_status_lamaran }}</span>
             {% if app.seeker.major %}<span class="chip">{{ icon('cap') }} {{ app.seeker.major.name }}</span>{% endif %}
+            {% if app.seeker.class_name %}<span class="chip">{{ icon('clipboard') }} {{ app.seeker.class_name }}</span>{% endif %}
             {% if app.seeker.graduation_year %}<span class="chip">{{ icon('calendar') }} Lulus {{ app.seeker.graduation_year }}</span>{% endif %}
+            {% if app.seeker.education_level %}<span class="chip">{{ icon('book') }} {{ app.seeker.education_level }}</span>{% endif %}
+            {% if app.seeker.interest %}<span class="chip">{{ icon('target') }} {{ app.seeker.interest | label_minat }}</span>{% endif %}
             {% if app.seeker.open_to_work %}<span class="badge ok">Terbuka untuk kerja</span>{% endif %}
           </div>
         </div>
@@ -54,9 +57,20 @@
           <div><small class="muted">Telepon</small><div class="strong">{{ app.seeker.phone or '-' }}</div></div>
           <div><small class="muted">Jenis kelamin</small><div class="strong">{{ {'L':'Laki-laki','P':'Perempuan'}.get(app.seeker.gender, '-') }}</div></div>
           <div><small class="muted">Tanggal lahir</small><div class="strong">{{ app.seeker.birth_date | tanggal }}</div></div>
+          <div><small class="muted">Agama</small><div class="strong">{{ app.seeker.religion or '-' }}</div></div>
           <div><small class="muted">Domisili</small><div class="strong">{{ app.seeker.city or '-' }}</div></div>
           <div><small class="muted">NIS / NISN</small><div class="strong">{{ app.seeker.nis or '-' }}</div></div>
         </div>
+        {% if app.seeker.address or app.seeker.social_media %}
+        <div class="grid grid-2 mb-2">
+          {% if app.seeker.address %}
+            <div><small class="muted">Alamat</small><div class="strong">{{ app.seeker.address }}</div></div>
+          {% endif %}
+          {% if app.seeker.social_media %}
+            <div><small class="muted">Media sosial</small><div class="strong">{{ app.seeker.social_media }}</div></div>
+          {% endif %}
+        </div>
+        {% endif %}
 
         {% if app.seeker.skill_list %}
         <h4>Keahlian</h4>

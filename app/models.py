@@ -52,6 +52,15 @@ class EmploymentType(str, enum.Enum):
     FREELANCE = "freelance"
 
 
+class Interest(str, enum.Enum):
+    """Rencana lulusan setelah tamat — bahan tracer study BKK."""
+
+    KERJA = "kerja"
+    KULIAH = "kuliah"
+    WIRAUSAHA = "wirausaha"
+    BELUM = "belum"
+
+
 class ApplicationStatus(str, enum.Enum):
     SUBMITTED = "submitted"
     REVIEWED = "reviewed"
@@ -61,6 +70,21 @@ class ApplicationStatus(str, enum.Enum):
     REJECTED = "rejected"
     WITHDRAWN = "withdrawn"
 
+
+INTEREST_LABEL = {
+    Interest.KERJA: "Bekerja",
+    Interest.KULIAH: "Melanjutkan Kuliah",
+    Interest.WIRAUSAHA: "Wirausaha",
+    Interest.BELUM: "Belum Menentukan",
+}
+
+# Enam agama yang diakui pada dokumen kependudukan Indonesia.
+AGAMA = ["Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"]
+
+# Jenjang pendidikan terakhir; lulusan baru SMK memilih "SMK/SMA Sederajat".
+PENDIDIKAN = [
+    "SMK/SMA Sederajat", "D1", "D2", "D3", "D4 / S1", "S2", "Lainnya",
+]
 
 EMPLOYMENT_LABEL = {
     EmploymentType.FULL_TIME: "Penuh Waktu",
@@ -200,8 +224,10 @@ class Seeker(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     nis: Mapped[str | None] = mapped_column(String(30), index=True)
+    class_name: Mapped[str | None] = mapped_column(String(40))      # mis. "XII TKJ 1"
     phone: Mapped[str | None] = mapped_column(String(40))
     gender: Mapped[str | None] = mapped_column(String(10))          # L / P
+    religion: Mapped[str | None] = mapped_column(String(30))
     birth_place: Mapped[str | None] = mapped_column(String(100))
     birth_date: Mapped[date | None] = mapped_column(Date)
     address: Mapped[str | None] = mapped_column(Text)
@@ -210,6 +236,11 @@ class Seeker(Base):
         ForeignKey("majors.id", ondelete="SET NULL"), index=True
     )
     graduation_year: Mapped[int | None] = mapped_column(Integer, index=True)
+    education_level: Mapped[str | None] = mapped_column(String(40))
+    interest: Mapped[Interest | None] = mapped_column(
+        Enum(Interest, name="interest_enum"), index=True
+    )
+    social_media: Mapped[str | None] = mapped_column(String(200))
     is_alumni: Mapped[bool] = mapped_column(Boolean, default=True)
     headline: Mapped[str | None] = mapped_column(String(180))
     summary: Mapped[str | None] = mapped_column(Text)
@@ -235,8 +266,10 @@ class Seeker(Base):
         """Persentase kelengkapan profil — dipakai untuk nudge di dashboard."""
         fields = [
             self.phone, self.gender, self.birth_date, self.address, self.city,
-            self.major_id, self.graduation_year, self.headline, self.summary,
-            self.skills, self.education, self.cv_file, self.photo,
+            self.major_id, self.class_name, self.graduation_year, self.religion,
+            self.education_level, self.interest, self.social_media,
+            self.headline, self.summary, self.skills, self.education,
+            self.cv_file, self.photo,
         ]
         filled = sum(1 for f in fields if f)
         return round(filled / len(fields) * 100)
